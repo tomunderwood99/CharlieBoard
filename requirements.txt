@@ -1,0 +1,26 @@
+# MBTA LED Controller - Python Dependencies
+# Install all dependencies: pip install -r requirements.txt
+# Or use setup.py: pip install -e .
+# In my applications, I use setup.py to install the dependencies.
+
+# Web Interface
+Flask>=2.0.0
+
+# HTTP Requests & API
+requests>=2.25.0
+sseclient>=0.0.27
+
+# Configuration Management
+python-dotenv>=0.19.0
+
+# LED Control (Raspberry Pi specific)
+rpi-ws281x>=4.3.0
+adafruit-blinka>=6.0.0
+adafruit-circuitpython-neopixel>=6.0.0
+board>=1.0
+RPi.GPIO
+
+# Timezone Support
+pytz>=2021.1
+
+

@@ -1,0 +1,21 @@
+[Unit]
+Description=Daily System Reboot (Timer-triggered)
+After=network.target
+# Ensure this service stops before system shutdown
+Before=shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/home/pi/mbta_led_controller
+Environment=PYTHONUNBUFFERED=1
+# Log the reboot action
+ExecStartPre=/bin/sh -c 'echo "$(date): Initiating scheduled daily reboot" >> /home/pi/mbta_led_controller/logs/daily_reboot.log'
+# Perform clean system reboot
+ExecStart=/bin/systemctl reboot
+
+[Install]
+# This service is triggered by the timer, not started directly
+WantedBy=multi-user.target

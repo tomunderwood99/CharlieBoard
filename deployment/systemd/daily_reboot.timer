@@ -1,0 +1,17 @@
+[Unit]
+Description=Daily System Reboot Timer
+# Ensure timer stops before shutdown
+Before=shutdown.target
+Conflicts=shutdown.target
+
+[Timer]
+# Run at 3:00 AM daily
+OnCalendar=*-*-* 03:00:00
+# If system was off at 3 AM, don't run the missed reboot
+Persistent=false
+# Randomize execution time by up to 5 minutes to avoid exact timing issues
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+

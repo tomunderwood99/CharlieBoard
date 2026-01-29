@@ -1,0 +1,23 @@
+[Unit]
+Description=MBTA System Health Service
+After=network-online.target mbta_display.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+# Use environment variables for paths
+WorkingDirectory=/home/pi/mbta_led_controller
+Environment=PROJECT_ROOT=/home/pi/mbta_led_controller
+Environment=VENV_PATH=/home/pi/mbta_led_controller/venv
+# Delay startup to allow display service to fully initialize
+ExecStartPre=/bin/sleep 15
+ExecStart=/home/pi/mbta_led_controller/venv/bin/python -u /home/pi/mbta_led_controller/monitoring/health_monitor.py
+Restart=always
+RestartSec=10
+# Logs go directly to logs/system_health.log via Python's RotatingFileHandler
+# stdout/stderr captured by journalctl if needed: journalctl -u mbta_monitor
+
+[Install]
+WantedBy=multi-user.target 

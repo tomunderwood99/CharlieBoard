@@ -1,0 +1,16 @@
+1x PCB or WS2812 string with appropriate leds (47 for Red Line)
+1x Raspberry Pi Zero 2W
+1x MicroSD Chip
+1x 8"x10" Picture Frame
+1x 3D printed RPI case
+4x M2.5x12mm screws
+4x M2.5 nuts 
+
+1x 5v4A USBC Power Supply (can sub for other connection type)
+1x 1N5819 Schottky Diode
+1x USBC-to-wire connector
+1x 3 pin JST female surface mount connector
+1x 3 pin JST male wired connector
+Misc wires
+Soldering station
+Heat shrink tubing

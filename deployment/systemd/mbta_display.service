@@ -1,0 +1,21 @@
+[Unit]
+Description=MBTA LED Display Controller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Run as root for GPIO access
+User=root
+Group=root
+# Use environment variables for paths
+WorkingDirectory=/home/pi/mbta_led_controller
+Environment=PYTHONUNBUFFERED=1
+Environment=PROJECT_ROOT=/home/pi/mbta_led_controller
+Environment=VENV_PATH=/home/pi/mbta_led_controller/venv
+ExecStart=/home/pi/mbta_led_controller/venv/bin/python /home/pi/mbta_led_controller/runtime/startup.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

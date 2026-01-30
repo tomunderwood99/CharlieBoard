@@ -23,8 +23,6 @@ This guide walks through setting up the MBTA LED Controller on a fresh Raspberry
 15. [Set Up Status Command (Optional)](#step-15-set-up-status-command-optional)
 16. [Access Web Interface](#step-16-access-web-interface)
 
----
-
 ## Step 1: Prepare Your Raspberry Pi
 
 1. **Flash Raspberry Pi OS** using [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
@@ -235,8 +233,6 @@ Or use your Pi's IP: `http://192.168.1.xxx:8000`
 - Monitor system health
 
 **Optional:** Set up [nginx reverse proxy](nginx_reverse_proxy_setup.md) to access at `http://mbta-display.local` without the port number.
-
----
 
 ## Troubleshooting
 

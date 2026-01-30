@@ -22,8 +22,6 @@ See [Bill of Materials](bill_of_materials.md) for detailed pricing.
 - **Hardware assembly**: 1–3 hours
 - **Software setup**: 15–30 minutes (automated)
 
----
-
 ## Compatibility
 
 ### Can I use a different Raspberry Pi?
@@ -35,8 +33,6 @@ Yes, with code modifications. See [Transit System Adaptation Guide](transit_syst
 ### Can I use different LEDs?
 Designed for **WS2812B** (NeoPixel) addressable RGB LEDs. Other addressable types may work with code changes. Regular non-addressable LEDs won't work.
 
----
-
 ## Hardware
 
 ### Do I need the custom PCB?
@@ -47,8 +43,6 @@ See [Operations & Troubleshooting](operations_and_troubleshooting.md#leds-dont-l
 
 ### Can I power Pi and LEDs from the same supply?
 Yes. A 5V 4A USB-C supply can power both. Must share common ground.
-
----
 
 ## Software
 
@@ -74,8 +68,6 @@ git pull
 sudo systemctl restart mbta_display.service
 ```
 
----
-
 ## Display Modes
 
 ### What do the different modes show?
@@ -90,13 +82,9 @@ Automatically turns off display during specified hours (e.g., 10 PM – 6 AM). C
 ### How often does the display update?
 Real-time via MBTA API stream—typically every few seconds.
 
----
-
 ## Troubleshooting
 
 For detailed troubleshooting, see [Operations & Troubleshooting](operations_and_troubleshooting.md).
-
----
 
 ## Other
 
@@ -111,7 +99,5 @@ No. This is an independent project using publicly available MBTA data.
 
 ### Can I share my build?
 Absolutely! Tag and share on social media—I'd love to see your builds.
-
----
 
 **Still have questions?** Open an issue on GitHub.

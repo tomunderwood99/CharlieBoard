@@ -48,8 +48,6 @@ sudo systemctl restart mbta_display.service
 
 Most settings can also be changed via the web interface without restart.
 
----
-
 ## Troubleshooting
 
 ### LEDs Don't Light Up
@@ -126,8 +124,6 @@ ls -la ~/mbta_led_controller/.env
 tail -f ~/mbta_led_controller/logs/*.log
 ```
 
----
-
 ## Quick Reference
 
 | Task | Command |
@@ -138,8 +134,6 @@ tail -f ~/mbta_led_controller/logs/*.log
 | Edit config | `nano ~/mbta_led_controller/.env` |
 | Test LEDs | `sudo -E venv/bin/python tests/red_test.py` |
 | Find Pi's IP | `hostname -I` |
-
----
 
 ## Additional Resources
 

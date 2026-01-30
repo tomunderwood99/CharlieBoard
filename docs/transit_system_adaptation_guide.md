@@ -23,8 +23,6 @@ How to adapt The CharlieBoard for transit systems other than the MBTA.
 - Monitoring (`monitoring/`)
 - System Services (`deployment/systemd/`)
 
----
-
 ## Prerequisites
 
 - Python proficiency
@@ -32,8 +30,6 @@ How to adapt The CharlieBoard for transit systems other than the MBTA.
 - Your transit system's API documentation and credentials
 - Geographic data for your transit system (OpenStreetMap, local GIS)
 - QGIS or similar for map creation
-
----
 
 ## Step 1: Research Your Transit API
 
@@ -57,8 +53,6 @@ How to adapt The CharlieBoard for transit systems other than the MBTA.
 | **UK** | [TfL Open Data](https://tfl.gov.uk/info-for/open-data-users/) |
 | **Europe** | [Île-de-France Mobilités](https://data.iledefrance-mobilites.fr/), [Berlin Open Data](https://daten.berlin.de/) |
 | **General** | [OpenStreetMap](https://www.openstreetmap.org/) |
-
----
 
 ## Step 2: Create Station ID Maps
 
@@ -89,8 +83,6 @@ station_ids = set(v['stop_id'] for v in response.json()['vehicles'])
 for sid in sorted(station_ids):
     print(f"'{sid}': 'STATION_NAME',")
 ```
-
----
 
 ## Step 3: Create Station LED Maps
 
@@ -123,8 +115,6 @@ station_led_maps = {
 ```
 
 **LED Count:** `(stations × 2) + branches`
-
----
 
 ## Step 4: Modify API Integration
 
@@ -176,8 +166,6 @@ def map_status(self, api_status):
     }.get(api_status, 'IN_TRANSIT_TO')
 ```
 
----
-
 ## Step 5: Create Your Map
 
 Follow [Map Making with QGIS](map_making_with_qgis.md), substituting:
@@ -201,8 +189,6 @@ Follow [Map Making with QGIS](map_making_with_qgis.md), substituting:
 | NYC Subway | 1/2/3 | `#EE352E` |
 | Paris Métro | M1 | `#FFCD00` |
 | Berlin U-Bahn | U1 | `#55A030` |
-
----
 
 ## Step 6: Testing
 
@@ -241,8 +227,6 @@ curl -H "Authorization: Bearer YOUR_KEY" https://api.yourtransit.com/vehicles
 sudo -E venv/bin/python tests/red_test.py
 ```
 
----
-
 ## Troubleshooting
 
 | Issue | Cause | Solution |
@@ -252,8 +236,6 @@ sudo -E venv/bin/python tests/red_test.py
 | No vehicles appear | API issue or wrong line name | Check API response, verify line identifier |
 | Wrong direction | Direction mapping inverted | Swap outbound/inbound maps |
 | Rate limiting | Polling too fast | Increase poll interval |
-
----
 
 ## Time Estimate
 
@@ -267,8 +249,6 @@ sudo -E venv/bin/python tests/red_test.py
 | PCB design | 8–16 |
 | Testing | 4–8 |
 | **Total** | **24–47** |
-
----
 
 ## Contributing
 

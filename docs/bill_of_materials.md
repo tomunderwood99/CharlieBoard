@@ -12,8 +12,6 @@ Complete parts list for building The CharlieBoard.
 
 *Most of the cost is the custom PCB (5-board minimum). Using LED strips instead brings total to ~$50.*
 
----
-
 ## Electronics
 
 | Component | Qty | Price | Notes |
@@ -37,8 +35,6 @@ Complete parts list for building The CharlieBoard.
 | M2.5×12mm Screws | 4 | $0.60 | Pi mounting |
 | M2.5 Nuts | 4 | $0.40 | Pi mounting |
 
----
-
 ## Component Notes
 
 ### Raspberry Pi Zero 2W
@@ -58,8 +54,6 @@ Protects GPIO from backflow current. Critical for safe operation.
 ### 3D Printed Case
 STL files in `hardware/RPI Case/`. Print at home or order from Craftcloud, Shapeways, etc.
 
----
-
 ## Budget Build (~$50)
 
 Skip the custom PCB for a minimal working system:
@@ -74,21 +68,15 @@ Skip the custom PCB for a minimal working system:
 
 **Trade-off:** Not geographically accurate, requires custom mounting.
 
----
-
 ## Self-Assembly PCB Option
 
 Order bare PCBs (~$2–5 each) and hand-solder components.
 - **Savings:** ~$60–80 per board
 - **Difficulty:** High—WS2812B-2020 LEDs are 2mm × 2mm, requires reflow oven
 
----
-
 ## Bulk Orders
 
 Custom PCB cost drops significantly with quantity. At 5 boards, cost is ~$24/board, bringing total build cost to ~$80 if the boards are split between 5 people.
-
----
 
 ## Where to Buy
 
@@ -97,8 +85,6 @@ Custom PCB cost drops significantly with quantity. At 5 boards, cost is ~$24/boa
 | Electronics | Adafruit, DigiKey, Mouser, Amazon |
 | PCB Manufacturing | JLCPCB (recommended), PCBWay, OSH Park |
 | 3D Printing | Local maker spaces, Craftcloud, Shapeways |
-
----
 
 ## Not Included
 

@@ -62,8 +62,6 @@ sudo systemctl status nginx
 
 Access your display at `http://hostname.local` (no port needed).
 
----
-
 ## Optional: Pi Zero 2W Optimization
 
 ```bash
@@ -82,8 +80,6 @@ large_client_header_buffers 2 1k;
 
 Then: `sudo systemctl restart nginx`
 
----
-
 ## Troubleshooting
 
 | Problem | Check |
@@ -92,8 +88,6 @@ Then: `sudo systemctl restart nginx`
 | Can't access web | Is Flask running? `sudo netstat -tlnp \| grep 8000` |
 | Port 80 in use | `sudo rm /etc/nginx/sites-enabled/default` |
 | Config test fails | `sudo nginx -t` shows which line has error |
-
----
 
 ## Useful Commands
 
@@ -104,8 +98,6 @@ sudo nginx -t                   # Test configuration
 sudo tail -f /var/log/nginx/error.log   # View errors
 sudo tail -f /var/log/nginx/access.log  # View access log
 ```
-
----
 
 ## Uninstalling
 

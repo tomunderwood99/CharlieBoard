@@ -5,13 +5,15 @@
 [![Hardware: Raspberry Pi](https://img.shields.io/badge/hardware-Raspberry%20Pi%20Zero%202W-C51A4A.svg)](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/tomunderwood99/CharlieBoard/issues)
 
-An open-source LED display system for the MBTA that runs on Raspberry Pi Zero 2W with WS2812B LEDs. Features real-time transit data visualization, web control interface, and geographically accurate station mapping.
+An open-source LED display system for the MBTA that runs on Raspberry Pi Zero 2W with WS2812B LEDs. Features real-time transit data visualization, web control interface, and geographically accurate station mapping. PCBs for the Blue, Orange, and Green Lines are in progress!
 
 ![CharlieBoard Display](hardware/images/hardware_carousel.gif)
 
 ## Quick Start
 
-**Prerequisites:** Raspberry Pi Zero 2W with Raspberry Pi OS, WiFi configured, SSH enabled, and an [MBTA API key](https://api-v3.mbta.com/).
+**Prerequisites:** Raspberry Pi Zero 2W with Raspberry Pi OS, a WS2812B LED strip or custom PCB, WiFi configured, SSH enabled (RPI Connect recommended), and an [MBTA API key](https://api-v3.mbta.com/). For assembly instructions, see the [Hardware Assembly Guide](docs/hardware_assembly_guide.md).
+
+Run the following commands to install and initialize the display.
 
 ```bash
 sudo apt update && sudo apt install -y git python3-pip
@@ -23,21 +25,19 @@ chmod +x deployment/quick_start/setup_mbta_controller.sh
 sudo ./deployment/quick_start/setup_mbta_controller.sh
 ```
 
-> **Note:** The sparse-checkout excludes the `hardware/` directory (PCB design files) to speed up cloning. This setting persists across future `git pull` operations. If you need the hardware files, run: `git sparse-checkout disable`
+The setup script will prompt for your MBTA API key and various setting inputs. After completion, access the web interface at `http://your-hostname.local:8000` on your local network.
 
-The setup script will prompt for your MBTA API key and configure everything automatically. Access the web interface at `http://your-hostname.local:8000` when complete.
+**Optional enhancement:** Set up a reverse proxy to access the web interface at `http://hostname.local` without the port number. See the [nginx reverse proxy setup guide](docs/nginx_reverse_proxy_setup.md).
 
-**Optional enhancements:**
-- [nginx reverse proxy](docs/nginx_reverse_proxy_setup.md) – Access at `http://hostname.local` without the port
-- [Raspberry Pi Connect](https://www.raspberrypi.com/documentation/services/connect.html) – Secure remote access from anywhere
+**Note:** The sparse-checkout excludes the `hardware/` directory (PCB design files) to speed up cloning. This setting persists across future `git pull` operations. If you need the hardware files, run: `git sparse-checkout disable`
 
 ## Features
 
 - **Real-time Transit Data**: Live vehicle positions, occupancy, and speed data
-- **Geographically Accurate**: Only LED display system with true geographic station mapping
+- **Geographically Accurate**: LED display system with geographic station mapping
 - **Web Control Interface**: Remote control from any device on your network
-- **Customizable Display**: Adjustable brightness, colors, and multiple display modes
-- **Reliable Operation**: Automatic recovery, health monitoring, and daily maintenance
+- **Customizable Display**: Adjustable brightness, colors, and display hours
+- **Reliable Operation**: Automatic recovery, health monitoring, and maintenance
 
 ## Hardware
 
@@ -49,7 +49,7 @@ The setup script will prompt for your MBTA API key and configure everything auto
 | MicroSD Card (16GB+) | For OS and software |
 | Display Enclosure | Picture frame or custom case |
 
-**Total Cost**: $50–177 depending on LED choice
+**Total Cost**: $50–180 depending on LED choice
 
 Complete PCB design files (Gerber + KiCad) are available in `hardware/PCB Production/`. See the [Bill of Materials](docs/bill_of_materials.md) for detailed pricing and sourcing.
 

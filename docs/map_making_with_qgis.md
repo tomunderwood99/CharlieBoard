@@ -1,6 +1,8 @@
 # Map Making with QGIS
 
-Create custom transit maps using QGIS and MassGIS data for PCB design or display visualizations.
+Create custom transit maps using QGIS and MassGIS data for PCB design or display visualizations. 
+
+I am by no means a QGIS expert, and this guide is a work in progress. I taught myself QGIS through trial and error, YouTube, and asking questions to LLMs. If you have any suggestions for improvements or need help, please feel free to reach out.
 
 > **System Requirements:** QGIS is computationally intensive. Recommended: 16GB+ RAM, dedicated GPU, SSD. Minimum: 8GB RAM, modern multi-core processor.
 
@@ -13,13 +15,11 @@ Create custom transit maps using QGIS and MassGIS data for PCB design or display
 5. [Create Print Layout](#create-print-layout)
 6. [Export](#export)
 
----
 
 ## Install QGIS
 
 Download the **Long Term Release (LTR)** from [qgis.org/download](https://qgis.org/download/).
 
----
 
 ## Download Data
 
@@ -31,8 +31,6 @@ MassGIS provides free geographic data: [mass.gov/info-details/massgis-data-layer
 - [MBTA Rapid Transit](https://www.mass.gov/info-details/massgis-data-mbta-rapid-transit)
 - [Open Space](https://www.mass.gov/info-details/massgis-data-protected-and-recreational-openspace)
 
----
-
 ## Set Up Project
 
 1. `Project > New`, then `Project > Save As` (e.g., "MBTA_RedLine_Map.qgz")
@@ -40,7 +38,6 @@ MassGIS provides free geographic data: [mass.gov/info-details/massgis-data-layer
 
 **Tip:** Keep downloaded data in the same folder as your project file.
 
----
 
 ## Add & Style Layers
 
@@ -85,8 +82,6 @@ Remove internal boundary lines in water layer:
 **Station Labels:** Properties > Labels > Single Labels
 - Select station name field, 8–10pt font, white buffer (1mm)
 
----
-
 ## Create Print Layout
 
 1. `Project > New Print Layout` → Name it
@@ -98,8 +93,6 @@ Remove internal boundary lines in water layer:
    - Add 0.25–0.5" margins
    - Lock map when done
 5. Add: Scale bar, North arrow, Title (`Add Item` menu)
-
----
 
 ## Export
 
@@ -119,8 +112,6 @@ Remove internal boundary lines in water layer:
 
 Export as PNG or PDF at 300 DPI. PDFs maintain vector quality.
 
----
-
 ## Tips
 
 ### Performance
@@ -130,7 +121,7 @@ Export as PNG or PDF at 300 DPI. PDFs maintain vector quality.
 - Clip data to your area of interest
 
 ### PCB Considerations
-- Exact geographic accuracy isn't always practical—consider schematic positioning
+- Exact geographic accuracy isn't always practical - when working with extremely dense transit areas, even tiny WS2812B-2020 LEDs would overlap. With this in mind, you may have to scale up your display significantly, reduce the number of LEDs (less lines, or 1/line), or use a diagram instead of a map.
 - Print at 100% scale on paper to verify LED placement
 
 ### Attribution
@@ -140,8 +131,6 @@ Include in documentation:
 Map data provided by MassGIS. Data is provided "as is" and may not be accurate or current.
 ```
 
----
-
 ## Troubleshooting
 
 | Issue | Solution |
@@ -150,8 +139,6 @@ Map data provided by MassGIS. Data is provided "as is" and may not be accurate o
 | Map distorted | Verify all layers use EPSG:26986 |
 | QGIS slow/crashes | Close unnecessary layers, filter features, restart periodically |
 | Roads too cluttered | Filter to Class 1 only, use scale-dependent rendering |
-
----
 
 ## Resources
 

@@ -1,6 +1,8 @@
 # Hardware Assembly Guide
 
-Assembly instructions for your MBTA LED display.
+Assembly instructions for your MBTA LED display. 
+
+These instructions could be improved significantly through the addition of visuals or a video tutorial. I will work on this in the future, but in the meantime, please feel free to reach out with any questions or suggestions.
 
 ## Safety
 
@@ -19,7 +21,6 @@ Assembly instructions for your MBTA LED display.
 
 **Recommended:**
 - Helping hands/third hand
-- Heat shrink tubing
 - Multimeter
 
 ## Components
@@ -31,15 +32,18 @@ See [Bill of Materials](bill_of_materials.md) for complete list.
 - MicroSD card (16GB+)
 - WS2812B LED strip OR custom PCB
 - 5V 4A USB-C power supply
+- USB-C to wire connector
+- 1N5819 Schottky diode
+- Female Dupont connectors
+- Heat shrink tubing
 - Wires (22–24 AWG for data, 18–20 AWG for power)
 
 **Optional:**
 - Picture frame or enclosure
 - JST connectors
-- 1N5819 Schottky diode
 - 3D printed Pi case
 
----
+
 
 ## Assembly Options
 
@@ -48,18 +52,17 @@ See [Bill of Materials](bill_of_materials.md) for complete list.
 - **Cons:** Less professional appearance
 - **Best for:** First builds, prototyping, tight budgets
 
-### Option 2: Custom PCB (Professional)
+### Option 2: Custom PCB (Best looking)
 - **Pros:** Clean look, exact LED placement
 - **Cons:** Higher cost, requires PCB fabrication
 - **Best for:** Permanent installations
 
----
 
 ## Option 1: LED Strip Assembly
 
 ### Step 1: Prepare LED Strip
 
-**LED counts per line:**
+**LED counts per line (includes 3 LEDs for map legend):**
 | Line | LEDs Needed |
 |------|-------------|
 | Red | 47 |
@@ -75,15 +78,15 @@ See [wiring diagram](../hardware/rpi_zero2w_ws2812b2020_wiring.pdf).
 
 1. **Data:** GPIO 18 (pin 12) → LED strip DIN
 2. **Ground:** Pi ground → LED strip ground AND power supply ground (**all grounds must be common**)
-3. **Power:** 5V supply → LED strip 5V (**not from Pi's 5V pin**)
+3. **Power:** Pi pin 2 or 4 (flow into pi through 1N5819 Schottky diode) → LED strip 5V and power supply connector. 
 
-Use heat shrink on all solder joints.
+These connections can be made using direct soldering, or a combination of connectors and wires. I recommend making a wire harness with the JST 3 pin cable, power supply connection, and Dupont connectors (see Option 2 Step 3 for more details).
+
+**All solder joints should covered with heat shrink tubing**
 
 ### Step 3: Mount & Test
 
 Mount LEDs to your display (poster, frame, etc.), then test with software.
-
----
 
 ## Option 2: Custom PCB Assembly
 
@@ -107,24 +110,29 @@ Check for:
 
 ### Step 3: Connect to Pi
 
-Create cable with:
-- JST connector (PCB side)
+On the PCB, solder a JST 3 pin connector to the back of the board, noting the orientation of the pins. This will determine which wires in the JST 3 pin cable are connected to which pins on the PCB.
+
+Create a cable with:
+- JST 3 pin cable
+- Power supply connection (USB-C to 2 wire connector)
 - Dupont connectors (Pi GPIO side)
 - Schottky diode (1N5819) on 5V line to protect Pi
 
 **Connections:**
-- Data → GPIO 18 (pin 12)
-- Ground → Any ground pin
-- 5V → Pin 2 or 4 (through diode)
+- Data → GPIO 18 (pin 12). Solder a modified female Dupont connector to the data wire in the JST 3 pin cable.
+- Ground → Any ground pin on the Pi. Solder a modified female Dupont connector to the ground wire in the JST 3 pin cable and the ground wire in the power supply connection.
+- 5V → Pin 2 or 4 (through diode). Solder a modified female Dupont connector to the 5V wire in the JST 3 pin cable and the 5V wire in the power supply connection.
+
+**The Ground and 5V connection require three-way splicing! Take care that these are sturdy connections! Additionally, make sure to heat shrink the connections to protect them from short circuits.**
 
 ### Step 4: Final Assembly
 
 1. Remove front glass from picture frame
 2. Mount PCB with push tabs, screws, or adhesive
-3. Position Pi accessibly but hidden
-4. Connect power supply
-
----
+3. Connect the JST 3 pin cable to the PCB
+4. Connect the Dupont connectors to the Pi GPIO pins for data, ground, and 5V
+5. Position Pi accessibly but hidden
+6. Connect the power supply to the cable (powering both the Pi and the LEDs)
 
 ## Testing
 
@@ -136,19 +144,16 @@ sudo -E venv/bin/python tests/red_test.py
 
 All LEDs should turn red. Press Ctrl+C to exit.
 
----
-
 ## Common Mistakes
 
 | Mistake | Result | Fix |
 |---------|--------|-----|
 | No common ground | LEDs don't work | Connect Pi ground to LED power supply ground |
+| Schottky diode backwards | Pi does not boot | Check polarity of diode |
 | Wrong LED direction | LEDs don't light | Check arrows on strip, data flows one direction |
 | Insufficient power | Flickering | Use adequate supply (5V 3A+ for ~50 LEDs) |
 | Powering LEDs from Pi | Dim/no light | Use separate 5V supply for LEDs |
 | Wrong GPIO pin | No data | Use GPIO 18 (PWM-capable) |
-
----
 
 ## Next Steps
 

@@ -74,7 +74,9 @@ Cut strip at marked cut points. Note data flow direction (arrows on strip).
 
 ### Step 2: Wire Connections
 
-See [wiring diagram](../hardware/rpi_zero2w_ws2812b2020_wiring.pdf).
+See [wiring diagram](../hardware/rpi_zero2w_ws2812b2020_wiring.pdf) or the image below for a basic wiring diagram. 
+
+![Basic Pi and LED wiring](../hardware/images/basic_rpi_led_wiring.png)
 
 1. **Data:** GPIO 18 (pin 12) → LED strip DIN
 2. **Ground:** Pi ground → LED strip ground AND power supply ground (**all grounds must be common**)

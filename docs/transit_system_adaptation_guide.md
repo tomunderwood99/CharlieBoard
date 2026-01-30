@@ -168,7 +168,7 @@ def map_status(self, api_status):
 
 ## Step 5: Create Your Map
 
-Follow [Map Making with QGIS](map_making_with_qgis.md), substituting:
+Follow [Map Making with QGIS](map_making_with_qgis.md), substituting your region’s data and CRS. An example project (layers, QGIS project file, and PDF) is available in the [QGIS Example Google Drive folder](https://drive.google.com/drive/folders/1vFNIh-ThJNZXUUT2JSJMrOyUVWq9bhA2?usp=drive_link).
 
 ### Coordinate Reference System (CRS)
 

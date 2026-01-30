@@ -6,6 +6,16 @@ I am by no means a QGIS expert, and this guide is a work in progress. I taught m
 
 > **System Requirements:** QGIS is computationally intensive. Recommended: 16GB+ RAM, dedicated GPU, SSD. Minimum: 8GB RAM, modern multi-core processor.
 
+## Example Project
+
+A ready-to-use QGIS example is available on Google Drive: **[QGIS Example](https://drive.google.com/drive/folders/1vFNIh-ThJNZXUUT2JSJMrOyUVWq9bhA2?usp=drive_link)**. It includes:
+
+- Pre-processed layers (MassDOT Roads, Hydrography 25k, MBTA rapid transit lines, open space)
+- A saved project file (`qgis_example_map.qgz`) you can open in QGIS
+- A 4×4 example PDF for reference
+
+Download the folder contents and open the `.qgz` file in QGIS to explore the layer setup and styling used for CharlieBoard-style maps.
+
 ## Overview
 
 1. [Install QGIS](#install-qgis)
@@ -142,6 +152,7 @@ Map data provided by MassGIS. Data is provided "as is" and may not be accurate o
 
 ## Resources
 
+- [QGIS Example (Google Drive)](https://drive.google.com/drive/folders/1vFNIh-ThJNZXUUT2JSJMrOyUVWq9bhA2?usp=drive_link) – Layers + project file + example PDF
 - [QGIS Documentation](https://docs.qgis.org/)
 - [QGIS Tutorials](https://www.qgistutorials.com/)
 - MassGIS Contact: massgismail@mass.gov

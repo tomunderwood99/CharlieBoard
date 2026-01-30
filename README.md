@@ -63,7 +63,7 @@ Complete PCB design files (Gerber + KiCad) are available in `hardware/PCB Produc
 | [Hardware Assembly](docs/hardware_assembly_guide.md) | PCB assembly instructions |
 | [Operations & Troubleshooting](docs/operations_and_troubleshooting.md) | Maintenance and problem solving |
 | [Transit System Adaptation](docs/transit_system_adaptation_guide.md) | Adapt for other transit systems |
-| [Map Making with QGIS](docs/map_making_with_qgis.md) | Create custom transit maps |
+| [Map Making with QGIS](docs/map_making_with_qgis.md) | Create custom transit maps ([example project](https://drive.google.com/drive/folders/1vFNIh-ThJNZXUUT2JSJMrOyUVWq9bhA2?usp=drive_link)) |
 
 ## Contributing
 

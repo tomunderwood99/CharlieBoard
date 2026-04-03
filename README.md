@@ -1,6 +1,7 @@
 # The CharlieBoard
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Software: MIT](https://img.shields.io/badge/software-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Hardware: CERN-OHL-S](https://img.shields.io/badge/hardware-CERN--OHL--S-0053A1.svg)](https://ohwr.org/project/cernohl/wikis/Documents/CERN-OHL-version-2)
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![Hardware: Raspberry Pi](https://img.shields.io/badge/hardware-Raspberry%20Pi%20Zero%202W-C51A4A.svg)](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/tomunderwood99/CharlieBoard/issues)
@@ -19,7 +20,7 @@ Run the following commands to install and initialize the display.
 sudo apt update && sudo apt install -y git python3-pip
 cd ~
 git clone --filter=blob:none --sparse https://github.com/tomunderwood99/CharlieBoard.git
-cd mbta_led_controller
+cd CharlieBoard
 git sparse-checkout set --no-cone '/*' '!hardware'
 chmod +x deployment/quick_start/setup_mbta_controller.sh
 sudo ./deployment/quick_start/setup_mbta_controller.sh
@@ -75,11 +76,18 @@ Contributions are welcome! Please:
 4. Commit your changes (`git commit -m 'Add amazing feature'`)
 5. Push and open a Pull Request
 
-Follow existing code style, update documentation for new features, and add comments for complex logic.
+Follow existing code style, update documentation for new features, and add comments for complex logic. Contributions to **software** are under the MIT License; contributions to **`hardware/`** design files are under CERN-OHL-S, as described in [License](#license).
 
 ## License
 
-MIT License – See [LICENSE](LICENSE.txt) for details.
+This repository uses two licenses:
+
+| Scope | License | Full text |
+|-------|---------|-----------|
+| **Software** (Python, scripts, configs, docs outside `hardware/`, and everything except the `hardware/` tree) | [MIT License](https://opensource.org/licenses/MIT) | [LICENSE](LICENSE) |
+| **`hardware/`** (PCB designs, KiCad projects, Gerbers, and related production files in this directory) | [CERN Open Hardware Licence v2 — Strongly Reciprocal (CERN-OHL-S)](https://ohwr.org/project/cernohl/wikis/Documents/CERN-OHL-version-2) | [LICENSE-CERN-OHL-S](LICENSE-CERN-OHL-S) |
+
+Third-party materials bundled under `hardware/` may carry their own licenses (see notices in those subfolders).
 
 Copyright © 2025 Thomas Underwood
 

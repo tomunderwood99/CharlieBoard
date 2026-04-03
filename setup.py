@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="mbta_led_controller",
     version="0.1.0",
+    license="MIT",
     packages=find_packages(),
     install_requires=[
         "Flask>=2.0.0",

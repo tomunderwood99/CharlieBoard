@@ -92,7 +92,7 @@ For detailed troubleshooting, see [Operations & Troubleshooting](operations_and_
 Check the GitHub repository for recent activity.
 
 ### Can I sell displays built with this?
-Yes (MIT license). Please credit the project and respect MBTA's API terms of service.
+The **software** is under the MIT License ([LICENSE](../LICENSE)). **PCB and hardware design files** in `hardware/` are under CERN-OHL-S ([LICENSE-CERN-OHL-S](../LICENSE-CERN-OHL-S)); if you distribute or sell products built from those designs, follow that license’s requirements. Please credit the project where reasonable and respect the MBTA API terms of service.
 
 ### Does the MBTA endorse this?
 No. This is an independent project using publicly available MBTA data.

@@ -1,0 +1,81 @@
+# Python virtual environment
+venv/
+env/
+ENV/
+mlc_env/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE settings
+.idea/
+.vscode/
+.history/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local development settings
+instance/
+.webassets-cache
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Preview files (Mac development)
+preview_wifi_interface.py
+wifi_config_preview.html 
+
+# KiCad temporary files
+*.000
+*.bak
+*.bck
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*.kicad_pro-bak
+*-backups/
+_autosave-*
+
+# KiCad lock files
+*.lck
+
+# KiCad per-user project state (panel layout, last-open tab, zoom, etc.).
+*.kicad_prl
+
+# KiCad auto-generated caches. Do NOT add sym-lib-table or fp-lib-table
+*-cache.lib
+*-cache.dcm
+fp-info-cache
+
+# Ignore loose gerber files, but keep organized outputs
+/*.gbr
+/*.drl
+/*.pdf
+

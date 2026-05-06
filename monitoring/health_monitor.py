@@ -5,6 +5,7 @@ import logging
 import subprocess
 import requests
 from datetime import datetime, timedelta
+from typing import Optional
 import os
 import sys
 from logging.handlers import RotatingFileHandler
@@ -33,6 +34,28 @@ from config.constants import (
     WEB_SERVER_PORT,
 )
 
+# Wi-Fi interface monitored both here and in monitoring/network_monitor.py.
+# Kept in sync because the helper integration is wlan0-specific.
+WIFI_IFACE = "wlan0"
+
+# Public connectivity-check endpoints used to distinguish "MBTA is down" from
+# "the whole Internet is unreachable from this Wi-Fi network". We accept any
+# 2xx/3xx response; both URLs below are designed for this purpose and return
+# tiny payloads (Google's `generate_204` and Firefox's portal-detection page).
+# Crucially, NONE of these endpoints are MBTA — if the MBTA API is down for
+# its own reasons we must NOT classify that as a Wi-Fi problem and wipe the
+# user's saved network.
+INTERNET_PROBE_URLS = (
+    "https://www.gstatic.com/generate_204",
+    "https://detectportal.firefox.com/canonical.html",
+)
+
+# Name of the headless_wifi_helper systemd unit. We only delete the active
+# Wi-Fi connection profile to break a blackhole loop when this unit is
+# installed — without the helper, deleting the connection would orphan the
+# Pi (no way to re-enter credentials without a console / SD-card re-flash).
+WIFI_HELPER_UNIT = "wifi_configurator.service"
+
 # Configure logging with smaller file size
 # Note: No StreamHandler - when running via systemd, stdout is captured by journalctl
 os.makedirs('logs', exist_ok=True)
@@ -49,6 +72,81 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+
+def _wifi_helper_installed() -> bool:
+    """Return True if headless_wifi_helper's systemd unit is installed.
+
+    We check `list-unit-files` rather than `is-enabled` because a hand-disabled
+    unit is still a recovery target — its presence implies the user has the
+    helper repo on disk and can re-enable it from the captive portal. We do
+    NOT require the unit to be active right now (it's expected to be inactive
+    once boot has succeeded).
+    """
+    try:
+        result = subprocess.run(
+            ["systemctl", "list-unit-files", WIFI_HELPER_UNIT, "--no-legend"],
+            capture_output=True, text=True,
+            timeout=NETWORK_REQUEST_TIMEOUT_SECONDS,
+        )
+        # Output is e.g. "wifi_configurator.service enabled enabled" when present,
+        # empty string when absent.
+        return WIFI_HELPER_UNIT in result.stdout
+    except Exception as e:
+        logger.debug("Could not query systemctl for %s: %s", WIFI_HELPER_UNIT, e)
+        return False
+
+
+def _active_wifi_connection_name() -> Optional[str]:
+    """Return the active NetworkManager connection NAME on wlan0, or None.
+
+    Uses the terse `-t` output and field selection to avoid parsing column
+    widths. The NAME field can contain literal colons (rare for SSIDs but
+    legal), so we rely on DEVICE being the trailing field — `nmcli -t` escapes
+    any embedded colons within a field with a backslash, so a real `:wlan0`
+    suffix unambiguously separates the device from the (possibly colon-
+    containing) name.
+    """
+    try:
+        result = subprocess.run(
+            ["nmcli", "-t", "-f", "NAME,DEVICE", "connection", "show", "--active"],
+            capture_output=True, text=True,
+            timeout=NETWORK_REQUEST_TIMEOUT_SECONDS,
+        )
+        if result.returncode != 0:
+            return None
+        suffix = ":" + WIFI_IFACE
+        for line in result.stdout.splitlines():
+            if line.endswith(suffix):
+                # Unescape `\:` back to `:` in the NAME portion (nmcli -t
+                # escapes embedded colons inside fields).
+                name = line[: -len(suffix)].replace(r"\:", ":")
+                return name or None
+        return None
+    except FileNotFoundError:
+        return None
+    except Exception as e:
+        logger.debug("nmcli connection lookup failed: %s", e)
+        return None
+
+
+def _internet_reachable() -> bool:
+    """Return True if at least one public connectivity-check probe succeeds.
+
+    Used to distinguish MBTA-side outages (don't touch Wi-Fi) from Wi-Fi-side
+    blackholes (associated to a SSID with no working WAN, e.g. wrong upstream
+    password or captive portal). Any 2xx or 3xx counts; we deliberately do
+    not care about response bodies.
+    """
+    for url in INTERNET_PROBE_URLS:
+        try:
+            resp = requests.get(url, timeout=NETWORK_REQUEST_TIMEOUT_SECONDS)
+            if 200 <= resp.status_code < 400:
+                return True
+        except Exception:
+            continue
+    return False
+
 
 class SystemHealthService:
     """Service to monitor system health and perform maintenance."""
@@ -162,6 +260,80 @@ class SystemHealthService:
         logger.warning(f"Display service not available after {max_wait}s, starting monitoring anyway")
         return False
     
+    def _force_portal_recovery_if_blackholed(self) -> None:
+        """Break an associated-but-no-Internet reboot loop before rebooting.
+
+        Triggered just before we issue `shutdown -r now`. If we are about to
+        reboot because our /health endpoint has been failing AND we detect
+        that wlan0 is associated to a Wi-Fi network whose wider Internet is
+        unreachable (a "blackholed" association — bad upstream link, captive
+        portal we can't authenticate against, ISP outage on that SSID, …),
+        we delete the active NM connection profile so that on the next boot
+        the headless_wifi_helper sees no STA association and surfaces its
+        captive portal at 192.168.4.1.
+
+        Safety conditions — we only blow away the saved network when ALL of:
+          1. wifi_configurator.service is installed on this system. Without
+             the helper, deleting the connection would orphan the Pi.
+          2. wlan0 has an active NM connection (we can identify the saved
+             profile to delete).
+          3. None of our public Internet probes succeed. We deliberately do
+             not rely on the MBTA API here — if MBTA itself is down that's
+             not a reason to touch the user's Wi-Fi config.
+
+        Any failure path here is non-fatal: we always fall through to the
+        normal reboot below so a probe / nmcli failure can never block
+        recovery.
+        """
+        try:
+            if not _wifi_helper_installed():
+                # Without the helper, we have no recovery path post-delete.
+                return
+
+            connection_name = _active_wifi_connection_name()
+            if not connection_name:
+                # Either NM is not active (we'll just reboot and let
+                # network_monitor's iproute2 path do its thing on next boot),
+                # or wlan0 is already disconnected — either way, the helper
+                # will catch us on the next boot without our intervention.
+                return
+
+            if _internet_reachable():
+                # Internet works — this is an MBTA-side or local-service
+                # problem. Don't touch the Wi-Fi config; just reboot.
+                return
+
+            logger.warning(
+                "Wi-Fi appears blackholed (associated to '%s' but no public "
+                "endpoint reachable). Deleting NM connection before reboot "
+                "so headless_wifi_helper can surface the captive portal on "
+                "next boot.",
+                connection_name,
+            )
+            result = subprocess.run(
+                ["nmcli", "connection", "delete", "id", connection_name],
+                capture_output=True, text=True,
+                timeout=NETWORK_REQUEST_TIMEOUT_SECONDS,
+            )
+            if result.returncode != 0:
+                logger.error(
+                    "nmcli connection delete '%s' failed (rc=%s): %s",
+                    connection_name, result.returncode, result.stderr.strip(),
+                )
+            else:
+                logger.warning(
+                    "Deleted NM connection '%s'. The next boot will land in "
+                    "the captive portal at http://192.168.4.1.",
+                    connection_name,
+                )
+        except Exception as e:
+            # Never block reboot on a recovery-helper failure.
+            logger.error(
+                "Pre-reboot blackhole recovery raised %s: %s — proceeding "
+                "with reboot anyway.",
+                type(e).__name__, e,
+            )
+
     def run(self) -> None:
         """Run the system health service."""
         logger.info("Starting system health service...")
@@ -177,6 +349,11 @@ class SystemHealthService:
                 # Check if should reboot when unhealthy
                 if not is_healthy and self.should_reboot():
                     logger.warning("System unhealthy, initiating reboot...")
+                    # Best-effort: if we're stuck on a Wi-Fi network with no
+                    # working Internet, hand the next boot off to
+                    # headless_wifi_helper's captive portal instead of
+                    # silently re-associating to the same dead network.
+                    self._force_portal_recovery_if_blackholed()
                     subprocess.run(['sudo', 'shutdown', '-r', 'now'])
                     break
                 

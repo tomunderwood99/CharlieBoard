@@ -30,6 +30,78 @@ CREATED_VENV=false
 CREATED_ENV_FILE=false
 INSTALLED_SERVICES=false
 MODIFIED_BASHRC=false
+INSTALLED_WIFI_HELPER=false
+
+# WiFi helper integration flags. INSTALL_WIFI_HELPER may be set to "true",
+# "false", or left empty (the default), in which case the user is prompted
+# interactively. AP_SSID/AP_PASSWORD/WIFI_HELPER_DIR are only used when the
+# helper is actually installed; empty values fall through to the helper's
+# own defaults.
+INSTALL_WIFI_HELPER=""
+WIFI_HELPER_DIR=""
+AP_SSID=""
+AP_PASSWORD=""
+WIFI_HELPER_REPO_URL="https://github.com/tomunderwood99/headless_wifi_helper.git"
+
+# Argument parsing for non-interactive WiFi helper configuration. We only
+# parse a small set of flags that affect the helper integration; all other
+# user-facing settings still come from the interactive prompts below.
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --with-wifi-helper)
+            INSTALL_WIFI_HELPER=true
+            shift
+            ;;
+        --no-wifi-helper)
+            INSTALL_WIFI_HELPER=false
+            shift
+            ;;
+        --wifi-helper-dir)
+            WIFI_HELPER_DIR="$2"
+            shift 2
+            ;;
+        --ap-ssid)
+            AP_SSID="$2"
+            shift 2
+            ;;
+        --ap-password)
+            AP_PASSWORD="$2"
+            shift 2
+            ;;
+        -h|--help)
+            cat <<'EOF'
+Usage: sudo ./deployment/quick_start/setup_mbta_controller.sh [options]
+
+Options:
+  --with-wifi-helper          Install tomunderwood99/headless_wifi_helper so a
+                              captive-portal AP appears on first boot when no
+                              known WiFi is in range. The portal can also write
+                              the MBTA API key into CharlieBoard's .env.
+
+                              REQUIRES Raspberry Pi OS Trixie (NetworkManager
+                              as the network backend). Older images using
+                              dhcpcd / wpa_supplicant are NOT supported and
+                              the helper's setup will fail. If you're not on
+                              Trixie, pass --no-wifi-helper instead.
+  --no-wifi-helper            Skip the WiFi helper prompt and do not install it.
+  --wifi-helper-dir <path>    Where to clone the helper repo
+                              (default: /home/<user>/headless_wifi_helper).
+  --ap-ssid <ssid>            Override the captive-portal AP SSID
+                              (forwarded to the helper's setup.sh).
+  --ap-password <password>    Override the captive-portal AP password
+                              (forwarded to the helper's setup.sh; must be
+                              >= 12 chars per the helper's policy).
+  -h, --help                  Show this message and exit.
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown argument: $1" >&2
+            echo "Run with --help to see available options." >&2
+            exit 1
+            ;;
+    esac
+done
 
 # Logging functions
 log_info() {
@@ -79,6 +151,16 @@ cleanup_on_error() {
         log_info "Rolling back changes..."
         
         # Rollback in reverse order of installation
+        if [ "$INSTALLED_WIFI_HELPER" = true ]; then
+            log_info "Disabling and removing wifi_configurator.service..."
+            systemctl disable --now wifi_configurator.service 2>/dev/null || true
+            rm -f /etc/systemd/system/wifi_configurator.service
+            systemctl daemon-reload
+            # Note: we intentionally do NOT delete the cloned helper repo —
+            # the user may have edited it, and `git clone` is cheap to redo.
+            log_success "wifi_configurator.service removed (helper repo left in place)"
+        fi
+
         if [ "$INSTALLED_SERVICES" = true ]; then
             log_info "Stopping and removing systemd services..."
             systemctl stop mbta_display.service 2>/dev/null || true
@@ -214,16 +296,60 @@ echo "This script will guide you through the initial setup."
 echo "You'll need to provide a few key pieces of information."
 echo ""
 
-# Prompt for MBTA API Key
-while true; do
-    read -p "Enter your MBTA API Key (get one free at https://api-v3.mbta.com/): " MBTA_API_KEY
-    if [ -n "$MBTA_API_KEY" ]; then
-        break
+# Prompt for headless WiFi helper installation. We do this first so the
+# MBTA API key prompt below can be made optional when the helper is being
+# installed (the captive portal can also write the key into .env later).
+# If --with-wifi-helper or --no-wifi-helper was passed, skip the prompt.
+# Default is "no" — installing the helper pulls in NetworkManager, dnsmasq,
+# and a separate cloned repo, so we keep the existing minimal install path
+# unless the user explicitly opts in.
+if [ -z "$INSTALL_WIFI_HELPER" ]; then
+    echo "The headless WiFi helper (tomunderwood99/headless_wifi_helper) brings"
+    echo "up a temporary access point on boot whenever no known WiFi network is"
+    echo "in range, so you can reconfigure WiFi from a phone without re-flashing"
+    echo "the Pi. The captive portal can also save your MBTA API key directly"
+    echo "into this project's .env file."
+    echo ""
+    echo "REQUIRES Raspberry Pi OS Trixie (NetworkManager as the network backend)."
+    echo "Older images using dhcpcd / wpa_supplicant are NOT supported."
+    echo ""
+    read -p "Install the headless WiFi helper? [y/N]: " install_helper
+    install_helper=${install_helper:-N}
+    if [ "$install_helper" = "y" ] || [ "$install_helper" = "Y" ]; then
+        INSTALL_WIFI_HELPER=true
     else
-        log_warning "API Key is required. Please enter a valid key."
+        INSTALL_WIFI_HELPER=false
     fi
-done
-log_success "API Key configured"
+fi
+if [ "$INSTALL_WIFI_HELPER" = true ]; then
+    log_success "Headless WiFi helper will be installed"
+else
+    log_info "Headless WiFi helper will NOT be installed"
+fi
+
+# Prompt for MBTA API Key. When the WiFi helper is being installed, the user
+# can leave this blank and enter the key later via the captive portal — the
+# helper writes MBTA_API_KEY straight into CharlieBoard's .env on submit.
+echo ""
+if [ "$INSTALL_WIFI_HELPER" = true ]; then
+    read -p "Enter your MBTA API Key (get one free at https://api-v3.mbta.com/) [leave blank to enter via the WiFi helper portal later]: " MBTA_API_KEY
+    if [ -z "$MBTA_API_KEY" ]; then
+        log_warning "API Key not provided — you can paste it into the captive portal on first connection."
+        log_warning "The display services will start with an empty key and reconnect once the portal writes one."
+    else
+        log_success "API Key configured"
+    fi
+else
+    while true; do
+        read -p "Enter your MBTA API Key (get one free at https://api-v3.mbta.com/): " MBTA_API_KEY
+        if [ -n "$MBTA_API_KEY" ]; then
+            break
+        else
+            log_warning "API Key is required. Please enter a valid key."
+        fi
+    done
+    log_success "API Key configured"
+fi
 
 # Prompt for MBTA Line/Route
 echo ""
@@ -557,6 +683,70 @@ echo "Or test the status now without the alias:"
 echo -e "  ${BLUE}$VENV_PATH/bin/python3 $PROJECT_DIR/runtime/status_check.py${NC}"
 
 ###############################################################################
+# Headless WiFi Helper Installation (Optional)
+###############################################################################
+
+# This installs tomunderwood99/headless_wifi_helper alongside CharlieBoard.
+# At boot, that project's wifi_configurator.service waits up to ~30s for wlan0
+# to associate as a WiFi client. If it does not, the service brings up a
+# captive-portal AP at 192.168.4.1 and blocks until the user submits new
+# credentials and reboots. The helper's service is `Before=network-online.target`
+# and CharlieBoard's services are `After=network-online.target`, so boot-time
+# ordering is automatic — no edits to the mbta_*.service files are required.
+# At runtime, if WiFi is lost long enough that mbta_monitor.service reboots
+# the Pi, the helper picks up again on the next boot.
+
+if [ "$INSTALL_WIFI_HELPER" = true ]; then
+    print_header "Headless WiFi Helper Installation"
+
+    # Default install location: a sibling of CharlieBoard in the user's home.
+    HELPER_DIR_DEFAULT="/home/$ACTUAL_USER/headless_wifi_helper"
+    HELPER_DIR="${WIFI_HELPER_DIR:-$HELPER_DIR_DEFAULT}"
+
+    log_info "Helper directory: $HELPER_DIR"
+
+    if [ ! -d "$HELPER_DIR" ]; then
+        log_info "Cloning headless_wifi_helper from $WIFI_HELPER_REPO_URL..."
+        if sudo -u "$ACTUAL_USER" git clone "$WIFI_HELPER_REPO_URL" "$HELPER_DIR" 2>&1 | tee /tmp/wifi_helper_clone.log | grep -iE "(error|failed|fatal)" >&2; then
+            log_error "Failed to clone headless_wifi_helper. Check /tmp/wifi_helper_clone.log for details."
+            exit 1
+        fi
+        log_success "headless_wifi_helper cloned"
+    else
+        log_warning "$HELPER_DIR already exists — using the existing checkout (not re-cloning)."
+    fi
+
+    # Build the helper's setup.sh argument list. We always pin the .env file
+    # path to CharlieBoard's .env and the env key name to MBTA_API_KEY so the
+    # captive portal writes the API key directly into our config. AP_SSID and
+    # AP_PASSWORD are optional pass-throughs; when empty, the helper's own
+    # defaults / autogeneration take over (see its setup.sh).
+    HELPER_ARGS=(--env-file "$ENV_FILE" --env-key-name MBTA_API_KEY)
+    if [ -n "$AP_SSID" ]; then
+        HELPER_ARGS+=(--ap-ssid "$AP_SSID")
+    fi
+    if [ -n "$AP_PASSWORD" ]; then
+        HELPER_ARGS+=(--ap-password "$AP_PASSWORD")
+    fi
+
+    log_info "Running headless_wifi_helper setup (this installs network-manager, dnsmasq, etc.)..."
+    log_info "Helper setup args: ${HELPER_ARGS[*]}"
+    echo ""
+
+    # The helper's setup.sh requires root and is already idempotent enough for
+    # re-runs; it streams its own colored progress to stdout, so we let it
+    # through unfiltered.
+    if (cd "$HELPER_DIR" && bash ./deployment/setup.sh "${HELPER_ARGS[@]}"); then
+        INSTALLED_WIFI_HELPER=true
+        log_success "headless_wifi_helper installed and wifi_configurator.service enabled"
+    else
+        log_error "headless_wifi_helper setup failed (see output above)"
+        log_error "You can re-run it manually later: cd $HELPER_DIR && sudo ./deployment/setup.sh ${HELPER_ARGS[*]}"
+        exit 1
+    fi
+fi
+
+###############################################################################
 # LED Hardware Test (Optional)
 ###############################################################################
 
@@ -601,6 +791,9 @@ echo "  🚇 MBTA Route: $MBTA_ROUTE Line"
 echo "  🌍 Timezone: $TIMEZONE"
 echo "  🔆 Brightness: $BRIGHTNESS"
 echo "  😴 Bedtime: $BEDTIME_START - $BEDTIME_END"
+if [ "$INSTALLED_WIFI_HELPER" = true ]; then
+    echo "  📶 WiFi Helper: installed at ${HELPER_DIR}"
+fi
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════════════════${NC}"
 echo ""
@@ -640,6 +833,22 @@ echo "  • Configuration file: $ENV_FILE"
 echo "  • Logs location: $PROJECT_DIR/logs/"
 echo "  • View reboot schedule: ${BLUE}sudo systemctl list-timers daily_reboot.timer${NC}"
 echo ""
+
+if [ "$INSTALLED_WIFI_HELPER" = true ]; then
+    echo -e "${YELLOW}Headless WiFi Helper:${NC}"
+    echo ""
+    echo "  • If the Pi boots without a known WiFi network, a captive-portal"
+    echo "    access point will appear so you can reconfigure WiFi (and the"
+    echo "    MBTA API key) from a phone — no re-flashing required."
+    echo "  • The helper waits ~30s for wlan0 to associate before starting"
+    echo "    the AP. The MBTA services (After=network-online.target) will"
+    echo "    wait until either WiFi is up or you reconfigure it via the portal."
+    echo "  • Helper service: ${BLUE}systemctl status wifi_configurator.service${NC}"
+    echo "  • Helper logs:    ${BLUE}sudo journalctl -u wifi_configurator.service -f${NC}"
+    echo "  • Helper repo:    ${BLUE}$HELPER_DIR${NC}"
+    echo "  • See $HELPER_DIR/README.md for AP SSID/password and customization."
+    echo ""
+fi
 
 read -p "Would you like to start the services now? [Y/n]: " start_now
 start_now=${start_now:-Y}

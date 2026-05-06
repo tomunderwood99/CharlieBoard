@@ -12,16 +12,19 @@ An open-source LED display system for the MBTA that runs on Raspberry Pi Zero 2W
 
 ## Quick Start
 
-**Prerequisites:** Raspberry Pi Zero 2W with Raspberry Pi OS, a WS2812B LED strip or custom PCB, WiFi configured, SSH enabled (RPI Connect recommended), and an [MBTA API key](https://api-v3.mbta.com/). For assembly instructions, see the [Hardware Assembly Guide](docs/hardware_assembly_guide.md).
+**Prerequisites:** Raspberry Pi Zero 2W with Debian Trixie 64-bit Lite, a WS2812B LED strip or custom PCB, WiFi configured, SSH enabled (RPI Connect recommended), and an [MBTA API key](https://api-v3.mbta.com/). For assembly instructions, see the [Hardware Assembly Guide](docs/hardware_assembly_guide.md).
 
 Run the following commands to install and initialize the display.
 
 ```bash
 sudo apt update && sudo apt install -y git python3-pip
+
 cd ~
 git clone --filter=blob:none --sparse https://github.com/tomunderwood99/CharlieBoard.git
+
 cd CharlieBoard
 git sparse-checkout set --no-cone '/*' '!hardware'
+
 chmod +x deployment/quick_start/setup_mbta_controller.sh
 sudo ./deployment/quick_start/setup_mbta_controller.sh
 ```

@@ -80,6 +80,38 @@ large_client_header_buffers 2 1k;
 
 Then: `sudo systemctl restart nginx`
 
+## Coexistence with the headless WiFi helper
+
+If you also installed [`tomunderwood99/headless_wifi_helper`](https://github.com/tomunderwood99/headless_wifi_helper)
+via `setup_mbta_controller.sh --with-wifi-helper`, both services want port 80,
+but on a normal boot they don't actually fight over it:
+
+- The helper's captive portal binds to `192.168.4.1:80` (the AP gateway IP),
+  not `0.0.0.0`, and only when `wifi_configurator.service` decides to bring
+  the AP up because no known WiFi is in range.
+- `wifi_configurator.service` is `Before=network-online.target`, and nginx
+  effectively starts after `network-online.target` is reached. So while the
+  captive portal is up, nginx is *not* running yet — no conflict.
+- Once WiFi is up, the helper exits, the AP comes down, and nginx then binds
+  port 80 on `0.0.0.0` (which includes wlan0's normal client IP).
+
+The one case where they collide is if you manually start
+`wifi_configurator.service` after the system is already up (e.g., for testing
+the portal). nginx will already own port 80 on `0.0.0.0`, which includes
+`192.168.4.1` once the AP comes up, and the portal will fail to bind with an
+`OSError: [Errno 98] Address already in use` in `journalctl -u wifi_configurator`.
+If you need to test the portal manually, stop nginx first:
+
+```bash
+sudo systemctl stop nginx
+sudo systemctl start wifi_configurator.service
+# When done:
+sudo systemctl stop wifi_configurator.service
+sudo systemctl start nginx
+```
+
+This is a manual-testing-only edge case; the normal boot path is conflict-free.
+
 ## Troubleshooting
 
 | Problem | Check |
@@ -88,6 +120,7 @@ Then: `sudo systemctl restart nginx`
 | Can't access web | Is Flask running? `sudo netstat -tlnp \| grep 8000` |
 | Port 80 in use | `sudo rm /etc/nginx/sites-enabled/default` |
 | Config test fails | `sudo nginx -t` shows which line has error |
+| `wifi_configurator` won't bind 80 | nginx already owns it — see [Coexistence](#coexistence-with-the-headless-wifi-helper) |
 
 ## Useful Commands
 

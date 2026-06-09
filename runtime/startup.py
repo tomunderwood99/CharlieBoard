@@ -145,7 +145,7 @@ def set_leds_blue_fallback() -> None:
         pixels = neopixel.NeoPixel(
             board.D18,
             led_count,
-            brightness=SAFE_MODE_BRIGHTNESS,  # Lower brightness for safe mode
+            brightness=SAFE_MODE_BRIGHTNESS,  # User-scale; hardware level set by BRIGHTNESS_MULTIPLIER
             auto_write=False,
             pixel_order=neopixel.GRB
         )

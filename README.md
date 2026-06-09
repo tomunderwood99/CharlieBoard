@@ -33,6 +33,21 @@ The setup script will prompt for your MBTA API key and various setting inputs. A
 
 **Optional enhancement:** Set up a reverse proxy to access the web interface at `http://hostname.local` without the port number. See the [nginx reverse proxy setup guide](docs/nginx_reverse_proxy_setup.md).
 
+### Terminal settings (`charlieboard`)
+
+Change display settings over SSH or Raspberry Pi Connect when the web UI is unavailable. 
+
+```bash
+charlieboard show                              # view current settings
+charlieboard set power on                      # turn display on
+charlieboard set mode occupancy                # vehicles | occupancy | speed | rainbow
+charlieboard set bedtime --start 23:00 --end 06:30
+charlieboard set color stopped 255,0,0        # also #ff0000 or 255 0 0
+sudo charlieboard set route Green-B            # changes line; restarts services
+```
+
+Full command reference: [Terminal CLI guide](docs/cli.md).
+
 **Note:** The sparse-checkout excludes the `hardware/` directory (PCB design files) to speed up cloning. This setting persists across future `git pull` operations. If you need the hardware files, run: `git sparse-checkout disable`
 
 ## Features
@@ -62,6 +77,7 @@ Complete PCB design files (Gerber + KiCad) are available in `hardware/PCB Produc
 | Guide | Description |
 |-------|-------------|
 | [Quick Start Guide](deployment/quick_start/QUICK_START_GUIDE.md) | Step-by-step setup walkthrough |
+| [Terminal CLI](docs/cli.md) | Change settings from SSH without the web UI |
 | [Complete Setup Guide](docs/complete_setup_guide.md) | Detailed manual configuration |
 | [Bill of Materials](docs/bill_of_materials.md) | Hardware pricing and sourcing |
 | [Hardware Assembly](docs/hardware_assembly_guide.md) | PCB assembly instructions |

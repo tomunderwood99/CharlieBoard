@@ -43,9 +43,11 @@ SAFE_MODE_COLOR = (0, 0, 255)  # Blue
 # =============================================================================
 
 BRIGHTNESS_MIN = 0.0
-BRIGHTNESS_MAX = 1.0
+BRIGHTNESS_MAX = 1.0  # User/settings scale (slider, .env, validation)
 DEFAULT_BRIGHTNESS = 1.0
-SAFE_MODE_BRIGHTNESS = 0.3  # Lower brightness for safe mode indicator
+# Scales user brightness to NeoPixel hardware (1.0 slider * 0.3 ≈ prior "full" feel at 30%)
+BRIGHTNESS_MULTIPLIER = 0.3
+SAFE_MODE_BRIGHTNESS = 1.0  # User scale; same ~30% hardware as old 0.3 with BRIGHTNESS_MULTIPLIER
 
 # =============================================================================
 # HARDWARE CONSTANTS

@@ -20,18 +20,18 @@ def red_led_map():
 
 def blue_led_map():
     return (
-        # Mapping for one direction of travel (Northbound towards Wonderland)
-        {"Wonderland": 12, "Revere Beach": 13, "Beachmont": 14, "Suffolk Downs": 15, "Orient Heights": 16, "Wood Island": 17, "Airport": 18, "Maverick": 19, "Aquarium": 20, "State": 21, "Government Center": 22, "Bowdoin": 23},
-        # Mapping for the opposite direction of travel (Southbound towards Bowdoin)
-        {"Wonderland": 11, "Revere Beach": 10, "Beachmont": 9, "Suffolk Downs": 8, "Orient Heights": 7, "Wood Island": 6, "Airport": 5, "Maverick": 4, "Aquarium": 3, "State": 2, "Government Center": 1, "Bowdoin": 0}
+        # Mapping for one direction of travel (Southbound towards Bowdoin)
+        {"Wonderland": 11, "Revere Beach": 10, "Beachmont": 9, "Suffolk Downs": 8, "Orient Heights": 7, "Wood Island": 6, "Airport": 5, "Maverick": 4, "Aquarium": 3, "State": 2, "Government Center": 1, "Bowdoin": 0},
+        # Mapping for the opposite direction of travel (Northbound towards Wonderland)
+        {"Wonderland": 12, "Revere Beach": 13, "Beachmont": 14, "Suffolk Downs": 15, "Orient Heights": 16, "Wood Island": 17, "Airport": 18, "Maverick": 19, "Aquarium": 20, "State": 21, "Government Center": 22, "Bowdoin": 23}
     )
 
 def orange_led_map():
     return (
-        # Mapping for one direction of travel (Northbound towards Oak Grove)
-        {"Oak Grove": 20, "Malden Center": 21, "Wellington": 22, "Assembly": 23, "Sullivan Square": 24, "Community College": 25, "North Station": 26, "Haymarket": 27, "State": 28, "Downtown Crossing": 29, "Chinatown": 30, "Tufts Medical Center": 31, "Back Bay": 32, "Massachusetts Ave": 33, "Ruggles": 34, "Roxbury Crossing": 35, "Jackson Square": 36, "Stony Brook": 37, "Green Street": 38, "Forest Hills": 39},
-        # Mapping for the opposite direction of travel (Southbound towards Forest Hills)
-        {"Oak Grove": 19, "Malden Center": 18, "Wellington": 17, "Assembly": 16, "Sullivan Square": 15, "Community College": 14, "North Station": 13, "Haymarket": 12, "State": 11, "Downtown Crossing": 10, "Chinatown": 9, "Tufts Medical Center": 8, "Back Bay": 7, "Massachusetts Ave": 6, "Ruggles": 5, "Roxbury Crossing": 4, "Jackson Square": 3, "Stony Brook": 2, "Green Street": 1, "Forest Hills": 0}
+        # Mapping for one direction of travel (Southbound towards Forest Hills)
+        {"Oak Grove": 19, "Malden Center": 18, "Wellington": 17, "Assembly": 16, "Sullivan Square": 15, "Community College": 14, "North Station": 13, "Haymarket": 12, "State": 11, "Downtown Crossing": 10, "Chinatown": 9, "Tufts Medical Center": 8, "Back Bay": 7, "Massachusetts Ave": 6, "Ruggles": 5, "Roxbury Crossing": 4, "Jackson Square": 3, "Stony Brook": 2, "Green Street": 1, "Forest Hills": 0},
+        # Mapping for the opposite direction of travel (Northbound towards Oak Grove)
+        {"Oak Grove": 20, "Malden Center": 21, "Wellington": 22, "Assembly": 23, "Sullivan Square": 24, "Community College": 25, "North Station": 26, "Haymarket": 27, "State": 28, "Downtown Crossing": 29, "Chinatown": 30, "Tufts Medical Center": 31, "Back Bay": 32, "Massachusetts Ave": 33, "Ruggles": 34, "Roxbury Crossing": 35, "Jackson Square": 36, "Stony Brook": 37, "Green Street": 38, "Forest Hills": 39}
     )
 
 def green_b_led_map():

@@ -5,6 +5,11 @@ setup(
     version="0.1.0",
     license="MIT",
     packages=find_packages(),
+    entry_points={
+        "console_scripts": [
+            "charlieboard=cli.main:main",
+        ],
+    },
     install_requires=[
         "Flask>=2.0.0",
         "requests>=2.25.0",

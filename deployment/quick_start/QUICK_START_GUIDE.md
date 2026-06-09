@@ -131,7 +131,7 @@ See the helper's [README](https://github.com/tomunderwood99/headless_wifi_helper
 3. Installs dependencies
 4. Creates `.env` configuration
 5. Configures and installs systemd services
-6. Sets up convenience commands (`display_status`, `display_reboot`)
+6. Sets up convenience commands (`charlieboard` on PATH, `display_status`, `display_reboot`)
 7. Optionally installs the headless WiFi helper (`wifi_configurator.service`)
 8. Optionally tests LED hardware
 
@@ -142,10 +142,25 @@ See the helper's [README](https://github.com/tomunderwood99/headless_wifi_helper
 ### Quick Commands
 
 ```bash
-source ~/.bashrc        # Load aliases (first time)
-display_status          # Check system status
+charlieboard show       # On PATH after login (setup adds /etc/profile.d/mbta_led_controller.sh)
+display_status          # Alias in ~/.bashrc — new SSH session, or: source ~/.bashrc
 display_reboot          # Restart services
 ```
+
+### Terminal settings (no web UI)
+
+Useful over SSH or Raspberry Pi Connect when port 8000 is unreachable:
+
+```bash
+charlieboard show
+charlieboard set power on
+charlieboard set mode occupancy
+charlieboard set bedtime --start 23:00 --end 06:30
+charlieboard set color max_occupancy 255,128,0
+sudo charlieboard set route Orange    # restarts display services
+```
+
+See [CLI reference](../../docs/cli.md) for color names and details.
 
 ### Service Management
 
@@ -157,8 +172,9 @@ sudo journalctl -u mbta_display -f    # Live logs
 
 ### Change Configuration
 
-Use the web interface (easiest) or edit directly:
+Use the web interface (easiest), `charlieboard set ...`, or edit directly:
 ```bash
+charlieboard show
 nano ~/mbta_led_controller/.env
 sudo systemctl restart mbta_display.service
 ```

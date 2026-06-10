@@ -44,6 +44,15 @@ def build_parser() -> argparse.ArgumentParser:
         choices=['on', 'off'],
         help='Power state',
     )
+
+    brightness_parser = set_sub.add_parser(
+        'brightness',
+        help='Set display brightness (0.0-1.0)',
+    )
+    brightness_parser.add_argument(
+        'level',
+        help='Brightness from 0.0 (off) to 1.0 (full)',
+    )
     
     bedtime_parser = set_sub.add_parser('bedtime', help='Set bedtime window (HH:MM)')
     bedtime_parser.add_argument(
@@ -86,6 +95,8 @@ def main(argv=None) -> int:
             return settings_cmd.cmd_set_mode(settings_manager, args.mode)
         if args.setting == 'power':
             return settings_cmd.cmd_set_power(settings_manager, args.state)
+        if args.setting == 'brightness':
+            return settings_cmd.cmd_set_brightness(settings_manager, args.level)
         if args.setting == 'bedtime':
             return settings_cmd.cmd_set_bedtime(
                 settings_manager,

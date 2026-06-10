@@ -7,7 +7,9 @@ from config.validation import (
     VALID_ROUTES,
     VALID_DISPLAY_MODES,
     VALID_POWER_STATES,
+    validate_brightness,
 )
+from config.constants import BRIGHTNESS_MIN, BRIGHTNESS_MAX
 from cli.colors import parse_color, format_color
 from cli.service import restart_display_services
 
@@ -120,6 +122,23 @@ def cmd_set_mode(settings_manager: SettingsManager, mode: str) -> int:
         settings_manager,
         {'display_mode': mode},
         message=f"Display mode set to {mode}.",
+    )
+
+
+def cmd_set_brightness(settings_manager: SettingsManager, brightness: str) -> int:
+    try:
+        value = validate_brightness(float(brightness))
+    except (TypeError, ValueError):
+        print(
+            f"Invalid brightness '{brightness}'. Use a number from "
+            f"{BRIGHTNESS_MIN} to {BRIGHTNESS_MAX}.",
+            file=sys.stderr,
+        )
+        return 1
+    return _save_and_report(
+        settings_manager,
+        {'brightness': value},
+        message=f"Brightness set to {value}.",
     )
 
 

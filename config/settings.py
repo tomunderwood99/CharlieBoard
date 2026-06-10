@@ -146,6 +146,31 @@ class SettingsManager:
             logger.error(f"Error loading settings: {e}")
             return self.get_default_settings()
     
+    def _backup_env_file(self) -> None:
+        """Create a .env.bak copy before overwriting settings.
+
+        The display service runs as root and may leave a root-owned .env.bak
+        from web UI saves. Skip backup when a non-root user cannot overwrite
+        that file; align ownership when saving as root.
+        """
+        backup_file = f"{self.env_file}.bak"
+        try:
+            if os.path.exists(backup_file) and not os.access(backup_file, os.W_OK):
+                if os.geteuid() != 0:
+                    logger.debug(
+                        "Skipping .env backup: %s is not writable by current user",
+                        backup_file,
+                    )
+                    return
+            with open(self.env_file, 'r') as src, open(backup_file, 'w') as dst:
+                dst.write(src.read())
+            if os.geteuid() == 0 and os.path.exists(self.env_file):
+                env_stat = os.stat(self.env_file)
+                os.chown(backup_file, env_stat.st_uid, env_stat.st_gid)
+                os.chmod(backup_file, 0o644)
+        except Exception as e:
+            logger.warning(f"Failed to create .env backup: {e}")
+
     def save_settings(
         self,
         settings: Dict[str, Any],
@@ -177,12 +202,7 @@ class SettingsManager:
             
             # Create backup of existing .env file
             if os.path.exists(self.env_file):
-                backup_file = f"{self.env_file}.bak"
-                try:
-                    with open(self.env_file, 'r') as src, open(backup_file, 'w') as dst:
-                        dst.write(src.read())
-                except Exception as e:
-                    logger.warning(f"Failed to create .env backup: {e}")
+                self._backup_env_file()
             
             # Save to .env file
             with open(self.env_file, 'w') as f:

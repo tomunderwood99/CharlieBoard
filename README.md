@@ -12,7 +12,14 @@ An open-source LED display system for the MBTA that runs on Raspberry Pi Zero 2W
 
 ## Quick Start
 
-**Prerequisites:** Raspberry Pi Zero 2W with Debian Trixie 64-bit Lite, a WS2812B LED strip or custom PCB, WiFi configured, SSH enabled (RPI Connect recommended), and an [MBTA API key](https://api-v3.mbta.com/). For assembly instructions, see the [Hardware Assembly Guide](docs/hardware_assembly_guide.md).
+**Prerequisites:** 
+- Raspberry Pi Zero 2W with Debian Trixie 64-bit Lite
+- WS2812B LED strip or custom PCB
+- WiFi (configured during pi setup)
+- SSH enabled (RPI Connect recommended)
+- [MBTA API key](https://api-v3.mbta.com/)
+
+For hardware assembly instructions, see the [Hardware Assembly Guide](docs/hardware_assembly_guide.md).
 
 Run the following commands to install and initialize the display.
 
@@ -26,34 +33,25 @@ cd CharlieBoard
 git sparse-checkout set --no-cone '/*' '!hardware'
 
 chmod +x deployment/quick_start/setup_mbta_controller.sh
+
+# Optional: use flags to set custom recovery wifi settings:
+# --with-wifi-helper
+# --ap-ssid "CustomWifiName"
+# --ap-password "YourStrongPassword"
+
 sudo ./deployment/quick_start/setup_mbta_controller.sh
 ```
 
-The setup script will prompt for your MBTA API key and various setting inputs. After completion, access the web interface at `http://your-hostname.local:8000` on your local network.
+The setup script will prompt for your MBTA API key and various setting inputs. After completion, access the web interface at `http://your-hostname.local:8000` on your local network. Settings can be changed from the web interface or from the command line using the `charlieboard` command. See the [CLI reference](docs/cli.md) for details.
 
 **Optional enhancement:** Set up a reverse proxy to access the web interface at `http://hostname.local` without the port number. See the [nginx reverse proxy setup guide](docs/nginx_reverse_proxy_setup.md).
-
-### Terminal settings (`charlieboard`)
-
-Change display settings over SSH or Raspberry Pi Connect when the web UI is unavailable. 
-
-```bash
-charlieboard show                              # view current settings
-charlieboard set power on                      # turn display on
-charlieboard set mode occupancy                # vehicles | occupancy | speed | rainbow
-charlieboard set bedtime --start 23:00 --end 06:30
-charlieboard set color stopped 255,0,0        # also #ff0000 or 255 0 0
-sudo charlieboard set route Green-B            # changes line; restarts services
-```
-
-Full command reference: [Terminal CLI guide](docs/cli.md).
 
 **Note:** The sparse-checkout excludes the `hardware/` directory (PCB design files) to speed up cloning. This setting persists across future `git pull` operations. If you need the hardware files, run: `git sparse-checkout disable`
 
 ## Features
 
 - **Real-time Transit Data**: Live vehicle positions, occupancy, and speed data
-- **Geographically Accurate**: LED display system with geographic station mapping
+- **Geographically Accurate**: Stations are marked on a real map
 - **Web Control Interface**: Remote control from any device on your network
 - **Customizable Display**: Adjustable brightness, colors, and display hours
 - **Reliable Operation**: Automatic recovery, health monitoring, and maintenance

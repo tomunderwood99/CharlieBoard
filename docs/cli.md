@@ -29,6 +29,15 @@ charlieboard set power on
 charlieboard set power off
 ```
 
+### Set brightness
+
+```bash
+charlieboard set brightness 0.5
+charlieboard set brightness 1.0
+```
+
+Brightness is on a 0.0–1.0 scale (same as the web UI slider). Picked up by the running display on the next stream event.
+
 ### Set bedtimes
 
 ```bash

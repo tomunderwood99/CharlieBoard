@@ -85,6 +85,11 @@ class TestPatchSettings(unittest.TestCase):
         settings = self.manager.load_settings()
         self.assertEqual(settings['bedtime_start'], DEFAULT_SETTINGS['bedtime_start'])
 
+    def test_patch_brightness(self):
+        self.assertTrue(self.manager.patch_settings({'brightness': 0.25}))
+        settings = self.manager.load_settings()
+        self.assertEqual(settings['brightness'], 0.25)
+
 
 if __name__ == '__main__':
     unittest.main()

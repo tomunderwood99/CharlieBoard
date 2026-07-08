@@ -30,6 +30,7 @@ CREATED_VENV=false
 CREATED_ENV_FILE=false
 INSTALLED_SERVICES=false
 MODIFIED_BASHRC=false
+INSTALLED_PROFILE_D=false
 INSTALLED_WIFI_HELPER=false
 
 # WiFi helper integration flags. INSTALL_WIFI_HELPER may be set to "true",
@@ -177,6 +178,12 @@ cleanup_on_error() {
             log_success "Services removed"
         fi
         
+        if [ "$INSTALLED_PROFILE_D" = true ]; then
+            log_info "Removing profile.d PATH configuration..."
+            rm -f /etc/profile.d/mbta_led_controller.sh
+            log_success "profile.d configuration removed"
+        fi
+
         if [ "$MODIFIED_BASHRC" = true ] && [ -n "$ACTUAL_USER" ]; then
             log_info "Removing .bashrc modifications..."
             BASHRC_FILE="/home/$ACTUAL_USER/.bashrc"
@@ -185,6 +192,8 @@ cleanup_on_error() {
                 sed -i '/alias display_status=/d' "$BASHRC_FILE"
                 sed -i '/# MBTA LED Controller quick reboot command/d' "$BASHRC_FILE"
                 sed -i '/alias display_reboot=/d' "$BASHRC_FILE"
+                sed -i '/# MBTA LED Controller settings CLI/d' "$BASHRC_FILE"
+                sed -i '/alias charlieboard=/d' "$BASHRC_FILE"
                 log_success ".bashrc cleaned"
             fi
         fi
@@ -647,8 +656,29 @@ log_success "Services and timer enabled"
 
 print_header "Convenience Commands Setup"
 
-log_info "Setting up 'display_status' command alias..."
 BASHRC_FILE="/home/$ACTUAL_USER/.bashrc"
+PROFILE_D_FILE="/etc/profile.d/mbta_led_controller.sh"
+log_info "Adding charlieboard to PATH for login shells..."
+if [ -f "$PROFILE_D_FILE" ] && grep -q "$VENV_PATH/bin" "$PROFILE_D_FILE" 2>/dev/null; then
+    log_warning "profile.d PATH entry already exists"
+else
+    cat > "$PROFILE_D_FILE" <<EOF
+# MBTA LED Controller - charlieboard CLI and other venv console scripts
+export PATH="$VENV_PATH/bin:\$PATH"
+EOF
+    chmod 644 "$PROFILE_D_FILE"
+    INSTALLED_PROFILE_D=true
+    log_success "charlieboard available on PATH for new login sessions"
+fi
+
+# Remove legacy charlieboard bash alias (PATH via profile.d replaces it)
+if [ -f "$BASHRC_FILE" ] && grep -q "alias charlieboard=" "$BASHRC_FILE" 2>/dev/null; then
+    sed -i '/# MBTA LED Controller settings CLI/d' "$BASHRC_FILE"
+    sed -i '/alias charlieboard=/d' "$BASHRC_FILE"
+    log_info "Removed legacy charlieboard alias from .bashrc (using PATH instead)"
+fi
+
+log_info "Setting up 'display_status' command alias..."
 
 # Check if alias already exists
 if grep -q "alias display_status=" "$BASHRC_FILE" 2>/dev/null; then
@@ -676,10 +706,11 @@ else
 fi
 
 echo ""
-echo -e "${YELLOW}Note:${NC} The 'display_status' and 'display_reboot' aliases will work automatically in new terminal sessions."
-echo "To use them in your current session, run: ${BLUE}source ~/.bashrc${NC}"
+echo -e "${YELLOW}Note:${NC} ${BLUE}charlieboard${NC} is on your PATH after the next login (or run ${BLUE}source /etc/profile.d/mbta_led_controller.sh${NC} once in this shell)."
+echo "The ${BLUE}display_status${NC} and ${BLUE}display_reboot${NC} shortcuts are in ~/.bashrc — use a new SSH session, or ${BLUE}source ~/.bashrc${NC} in the window where you ran setup."
 echo ""
-echo "Or test the status now without the alias:"
+echo "Test now without reopening the terminal:"
+echo -e "  ${BLUE}$VENV_PATH/bin/charlieboard show${NC}"
 echo -e "  ${BLUE}$VENV_PATH/bin/python3 $PROJECT_DIR/runtime/status_check.py${NC}"
 
 ###############################################################################
@@ -815,10 +846,13 @@ echo -e "     ${YELLOW}http://$(hostname).local:8000${NC}"
 echo -e "     ${YELLOW}http://$(hostname -I | awk '{print $1}'):8000${NC}"
 echo ""
 echo "  5. Check system status:"
-echo -e "     ${YELLOW}source ~/.bashrc${NC}  ${BLUE}# Run this first to enable the aliases${NC}"
-echo -e "     ${YELLOW}display_status${NC}"
+echo -e "     ${YELLOW}display_status${NC}  ${BLUE}# new SSH session, or: source ~/.bashrc${NC}"
 echo ""
-echo "  6. Restart display services (if needed):"
+echo "  6. Change settings from the terminal (no web UI):"
+echo -e "     ${YELLOW}charlieboard show${NC}  ${BLUE}# on PATH after login; or use full path above${NC}"
+echo -e "     ${YELLOW}charlieboard set power on${NC}"
+echo ""
+echo "  7. Restart display services (if needed):"
 echo -e "     ${YELLOW}display_reboot${NC}"
 echo ""
 echo -e "     ${BLUE}Tip:${NC} The aliases will work automatically in new terminal sessions"

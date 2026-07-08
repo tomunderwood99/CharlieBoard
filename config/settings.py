@@ -2,11 +2,16 @@
 import json
 import os
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 from .validation import validate_settings, DEFAULT_SETTINGS
 
 logger = logging.getLogger(__name__)
+
+# Keys preserved on web save (route is setup-only in the UI)
+DEFAULT_PRESERVE_KEYS = ['route', 'show_debugger_options', 'save_error_data']
+CLI_PRESERVE_KEYS = ['show_debugger_options', 'save_error_data']
+
 
 class SettingsManager:
     """Manages loading and saving of display settings."""
@@ -141,11 +146,42 @@ class SettingsManager:
             logger.error(f"Error loading settings: {e}")
             return self.get_default_settings()
     
-    def save_settings(self, settings: Dict[str, Any]) -> bool:
+    def _backup_env_file(self) -> None:
+        """Create a .env.bak copy before overwriting settings.
+
+        The display service runs as root and may leave a root-owned .env.bak
+        from web UI saves. Skip backup when a non-root user cannot overwrite
+        that file; align ownership when saving as root.
+        """
+        backup_file = f"{self.env_file}.bak"
+        try:
+            if os.path.exists(backup_file) and not os.access(backup_file, os.W_OK):
+                if os.geteuid() != 0:
+                    logger.debug(
+                        "Skipping .env backup: %s is not writable by current user",
+                        backup_file,
+                    )
+                    return
+            with open(self.env_file, 'r') as src, open(backup_file, 'w') as dst:
+                dst.write(src.read())
+            if os.geteuid() == 0 and os.path.exists(self.env_file):
+                env_stat = os.stat(self.env_file)
+                os.chown(backup_file, env_stat.st_uid, env_stat.st_gid)
+                os.chmod(backup_file, 0o644)
+        except Exception as e:
+            logger.warning(f"Failed to create .env backup: {e}")
+
+    def save_settings(
+        self,
+        settings: Dict[str, Any],
+        preserve_keys: Optional[List[str]] = None,
+    ) -> bool:
         """Save settings to .env file.
         
         Args:
             settings: Dictionary containing settings to save
+            preserve_keys: Setting keys to keep from the existing .env instead of
+                the incoming values. None uses DEFAULT_PRESERVE_KEYS (web behavior).
             
         Returns:
             bool: True if save successful, False otherwise
@@ -154,27 +190,19 @@ class SettingsManager:
             # Validate settings before saving
             settings_dict = validate_settings(settings, self._default_settings)
             
-            # Preserve certain settings that shouldn't be overwritten from web interface
-            # These are settings that are not configurable from the web UI
-            # 'route' is set during initial setup and should not be changed via web interface
-            preserve_keys = ['route', 'show_debugger_options', 'save_error_data']
+            if preserve_keys is None:
+                preserve_keys = DEFAULT_PRESERVE_KEYS
             
-            # Load current settings to preserve values for non-web-configurable settings
-            if os.path.exists(self.env_file):
+            # Load current settings to preserve values for non-overwritable keys
+            if preserve_keys and os.path.exists(self.env_file):
                 current_settings = self.load_settings()
                 for preserve_key in preserve_keys:
                     if preserve_key in current_settings:
-                        # Preserve the existing value instead of using the default
                         settings_dict[preserve_key] = current_settings[preserve_key]
             
             # Create backup of existing .env file
             if os.path.exists(self.env_file):
-                backup_file = f"{self.env_file}.bak"
-                try:
-                    with open(self.env_file, 'r') as src, open(backup_file, 'w') as dst:
-                        dst.write(src.read())
-                except Exception as e:
-                    logger.warning(f"Failed to create .env backup: {e}")
+                self._backup_env_file()
             
             # Save to .env file
             with open(self.env_file, 'w') as f:
@@ -191,6 +219,29 @@ class SettingsManager:
         except Exception as e:
             logger.error(f"Error saving settings: {e}")
             return False
+
+    def patch_settings(
+        self,
+        updates: Dict[str, Any],
+        *,
+        preserve_route: bool = True,
+    ) -> bool:
+        """Merge updates into current settings, validate, and save to .env.
+        
+        Args:
+            updates: Partial settings to apply
+            preserve_route: If True, keep the existing route (CLI default for
+                non-route commands). If False, allow route to change (CLI route).
+            
+        Returns:
+            bool: True if save successful, False otherwise
+        """
+        current = self.load_settings()
+        merged = {**current, **updates}
+        preserve_keys = list(CLI_PRESERVE_KEYS)
+        if preserve_route:
+            preserve_keys = ['route'] + preserve_keys
+        return self.save_settings(merged, preserve_keys=preserve_keys)
     
     def check_and_reload(self) -> Dict[str, Any] | None:
         """Check if settings file has been modified and reload if needed.

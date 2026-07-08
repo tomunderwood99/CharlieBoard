@@ -8,6 +8,7 @@ from config.constants import (
     LED_OFF,
     BRIGHTNESS_MIN,
     BRIGHTNESS_MAX,
+    BRIGHTNESS_MULTIPLIER,
 )
 import logging
 
@@ -23,7 +24,7 @@ class LEDController:
         Args:
             led_count: Number of LEDs for train display
             color_key_count: Number of LEDs used for color key
-            brightness: Initial brightness (0.0 to 1.0)
+            brightness: Initial brightness on user scale (0.0 to 1.0, before BRIGHTNESS_MULTIPLIER)
             power_state: Initial power state ('on' or 'off')
             bedtime_start: Time to turn off display (24-hour format "HH:MM")
             bedtime_end: Time to turn on display (24-hour format "HH:MM")
@@ -45,7 +46,7 @@ class LEDController:
         self.pixels = neopixel.NeoPixel(
             board.D18,  # GPIO pin
             self.total_leds,
-            brightness=brightness,
+            brightness=self._hardware_brightness(brightness),
             auto_write=False,
             pixel_order=neopixel.GRB
         )
@@ -140,13 +141,18 @@ class LEDController:
                 # Show network status
                 self._show_network_status()
     
+    def _hardware_brightness(self, user_brightness: float) -> float:
+        """Map user/settings brightness (0–1) to NeoPixel hardware brightness."""
+        scaled = user_brightness * BRIGHTNESS_MULTIPLIER
+        return max(BRIGHTNESS_MIN, min(BRIGHTNESS_MAX, scaled))
+
     def set_brightness(self, brightness: float) -> None:
         """Set the brightness of the LED strip.
         
         Args:
-            brightness: Brightness value between 0.0 and 1.0
+            brightness: Brightness on user scale (0.0 to 1.0), scaled by BRIGHTNESS_MULTIPLIER
         """
-        self.pixels.brightness = max(BRIGHTNESS_MIN, min(BRIGHTNESS_MAX, brightness))
+        self.pixels.brightness = self._hardware_brightness(brightness)
         if self.is_display_on():
             self.pixels.show()
             # Record LED update for health monitoring

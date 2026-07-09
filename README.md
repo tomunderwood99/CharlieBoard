@@ -6,7 +6,7 @@
 [![Hardware: Raspberry Pi](https://img.shields.io/badge/hardware-Raspberry%20Pi%20Zero%202W-C51A4A.svg)](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/tomunderwood99/CharlieBoard/issues)
 
-An open-source LED display system for the MBTA that runs on Raspberry Pi Zero 2W with WS2812B LEDs. Features real-time transit data visualization, web control interface, and geographically accurate station mapping. PCBs for the Blue, Orange, and Green Lines are in progress!
+An open-source LED display system for the MBTA that runs on Raspberry Pi Zero 2W with WS2812B LEDs. Features real-time transit data visualization, web control interface, and geographically accurate station mapping. PCBs for the Red, Orange, and Blue line are live! Green line in progress :)
 
 ![CharlieBoard Display](hardware/images/hardware_carousel.gif)
 

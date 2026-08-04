@@ -64,13 +64,18 @@ def is_green_route(route: str) -> bool:
 class _PositionSample:
     lat: float
     lon: float
-    t: float  # unix seconds used for Δt
+    t: float  # preferred Δt clock (updated_at when present)
+    wall_t: float  # wall clock when we processed this sample (SSE fallback)
 
 
 @dataclass
 class _VehicleState:
     last_sample: Optional[_PositionSample] = None
     ema_mph: Optional[float] = None
+
+
+# Ignore haversine noise / identical GPS between updates (meters)
+_MIN_MOVE_M = 5.0
 
 
 class SpeedEstimator:
@@ -97,6 +102,20 @@ class SpeedEstimator:
         """Drop all vehicle history (e.g. quiet-hours wipe)."""
         self._state.clear()
 
+    def _dt_for_pair(self, prev: _PositionSample, curr: _PositionSample) -> Optional[float]:
+        """Prefer updated_at Δt; fall back to wall clock when that is out of window.
+
+        MBTA often re-emits vehicle SSE events with the same updated_at (Δt ≤ 0)
+        while wall time has advanced — without a wall fallback we never estimate.
+        """
+        dt = curr.t - prev.t
+        if self.min_dt <= dt <= self.max_dt:
+            return dt
+        wall_dt = curr.wall_t - prev.wall_t
+        if self.min_dt <= wall_dt <= self.max_dt:
+            return wall_dt
+        return None
+
     def resolve(self, vehicle_data: dict, route: str, wall_time: Optional[float] = None) -> Optional[float]:
         """Return display speed in mph, or None if unknown.
 
@@ -121,7 +140,9 @@ class SpeedEstimator:
         sample: Optional[_PositionSample] = None
         if lat is not None and lon is not None:
             try:
-                sample = _PositionSample(lat=float(lat), lon=float(lon), t=sample_t)
+                sample = _PositionSample(
+                    lat=float(lat), lon=float(lon), t=sample_t, wall_t=now
+                )
             except (TypeError, ValueError):
                 sample = None
 
@@ -166,11 +187,15 @@ class SpeedEstimator:
         if prev is None:
             return state.ema_mph
 
-        dt = sample.t - prev.t
-        if dt < self.min_dt or dt > self.max_dt:
+        dt = self._dt_for_pair(prev, sample)
+        if dt is None:
             return state.ema_mph
 
         distance_m = haversine_meters(prev.lat, prev.lon, sample.lat, sample.lon)
+        if distance_m < _MIN_MOVE_M:
+            # Identical / jitter-only GPS — keep prior EMA (don't invent 0 mph)
+            return state.ema_mph
+
         raw_mph = (distance_m / dt) * MS_TO_MPH
 
         max_mph = line_max_speed_mph(route)

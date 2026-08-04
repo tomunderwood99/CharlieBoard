@@ -221,13 +221,28 @@ class SpeedEstimatorTests(unittest.TestCase):
             "Red",
             wall_time=t0 + 5.0,
         )
-        # Δt = 1s < min_dt → keep prior
+        # updated_at Δt = 1s AND wall Δt = 1s — both out of window → keep prior
         skipped = self.est.resolve(
             _vehicle(lat=42.3620, lon=-71.0580, t=t0 + 6.0),
             "Red",
             wall_time=t0 + 6.0,
         )
         self.assertEqual(skipped, seeded)
+
+    def test_same_updated_at_falls_back_to_wall_clock(self):
+        """SSE often re-sends the same updated_at; use wall Δt instead."""
+        t0 = 1_700_000_000.0
+        # Same ISO timestamp on both updates (MBTA pattern)
+        same_stamp = _iso(t0)
+        v1 = _vehicle(lat=42.3600, lon=-71.0580, t=t0)
+        v1["attributes"]["updated_at"] = same_stamp
+        self.est.resolve(v1, "Red", wall_time=t0)
+
+        v2 = _vehicle(lat=42.3610, lon=-71.0580, t=t0)  # same t in ISO
+        v2["attributes"]["updated_at"] = same_stamp
+        mph = self.est.resolve(v2, "Red", wall_time=t0 + 5.0)
+        self.assertIsNotNone(mph)
+        self.assertGreater(mph, 40.0)
 
     def test_spike_rejected_keeps_prior_ema(self):
         t0 = 1_700_000_000.0

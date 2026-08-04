@@ -72,7 +72,7 @@ sudo systemctl restart mbta_display.service
 
 ### What do the different modes show?
 - **Vehicles**: Train positions (stopped, approaching, in transit)
-- **Speed**: Train speeds (green=slow, red=fast) — data limited
+- **Speed**: Train speeds (green=slow/stopped, red=fast, blue=unknown). Green Line uses API speed (m/s→mph); Red/Blue/Orange estimate from GPS when API speed is null.
 - **Occupancy**: Crowding levels — data limited
 - **Rainbow**: Animated rainbow for testing/decoration
 

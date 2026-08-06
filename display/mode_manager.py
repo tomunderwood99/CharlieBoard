@@ -1,6 +1,7 @@
 from typing import Dict, Type, Optional
 from .modes.base_mode import DisplayModeBase
 from .controller.led_controller import LEDController
+from .speed_estimator import SpeedEstimator
 from config.validation import DEFAULT_SETTINGS
 import time
 
@@ -27,6 +28,8 @@ class ModeManager:
         self.current_mode_name: Optional[str] = None
         # Track all known vehicles for mode switching
         self.known_vehicles: Dict[str, Dict] = {}
+        # Survives mode switches so speed history stays warm
+        self.speed_estimator = SpeedEstimator()
     
     def register_mode(self, name: str, mode_class: Type[DisplayModeBase]) -> None:
         """Register a new display mode.
@@ -36,6 +39,15 @@ class ModeManager:
             mode_class: Class implementing DisplayModeBase
         """
         self.available_modes[name] = mode_class
+
+    def _enrich_display_speed(self, vehicle_data: Dict) -> None:
+        """Attach attributes._display_speed_mph from API and/or GPS estimate."""
+        attrs = vehicle_data.get('attributes')
+        if attrs is None:
+            vehicle_data['attributes'] = {}
+            attrs = vehicle_data['attributes']
+        route = self.settings.get('route', 'Red')
+        attrs['_display_speed_mph'] = self.speed_estimator.resolve(vehicle_data, route)
     
     def switch_mode(self, mode_name: str) -> bool:
         """Switch to a different display mode.
@@ -79,6 +91,9 @@ class ModeManager:
             vehicle_data: Dictionary containing vehicle data
         """
         if self.current_mode:
+            # Enrich speed for SpeedMode (runs for all modes so history stays warm)
+            self._enrich_display_speed(vehicle_data)
+
             # Update known vehicles
             vehicle_id = vehicle_data.get('id')
             if vehicle_id:
@@ -155,6 +170,7 @@ class ModeManager:
             vehicle_id = vehicle_data.get('id')
             if vehicle_id and vehicle_id in self.known_vehicles:
                 del self.known_vehicles[vehicle_id]
+                self.speed_estimator.forget(vehicle_id)
                 self.current_mode.clear_vehicle(vehicle_data)
                 
                 # Update active vehicle count for health monitoring
@@ -176,6 +192,7 @@ class ModeManager:
             
             # Clear the known vehicles dictionary
             self.known_vehicles.clear()
+            self.speed_estimator.clear()
             
             # Update metrics to show 0 active vehicles
             if self.metrics:
@@ -189,4 +206,6 @@ class ModeManager:
                 self.current_mode.clear_vehicle(vehicle_data)
             self.current_mode.clear_display()
         self.led_controller.cleanup()
-        self.known_vehicles.clear() 
+        self.known_vehicles.clear()
+        self.speed_estimator.clear()
+ 

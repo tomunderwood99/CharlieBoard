@@ -77,7 +77,27 @@ RAINBOW_WHEEL_SEGMENT_2 = 170  # Second color transition boundary
 RAINBOW_WHEEL_MULTIPLIER = 3   # Color intensity multiplier
 
 # Speed mode
-MAX_VEHICLE_SPEED_MPH = 45  # Maximum expected train speed
+# MBTA attributes.speed is meters/second when present; convert before display.
+MS_TO_MPH = 2.2369362921
+
+# Per-line color ceilings / spike caps (mph). Orange tops out higher than Red/Blue.
+LINE_MAX_SPEED_MPH = {
+    "Red": 50,
+    "Blue": 50,
+    "Orange": 55,
+    "Green-B": 50,
+    "Green-C": 50,
+    "Green-D": 50,
+    "Green-E": 50,
+}
+# Fallback when route is unknown (also used by legacy imports)
+MAX_VEHICLE_SPEED_MPH = 50
+
+# GPS speed-from-position estimator (SSE-driven Δt, not a poll interval)
+SPEED_ESTIMATE_MIN_DT_S = 2.0
+SPEED_ESTIMATE_MAX_DT_S = 45.0
+SPEED_EMA_ALPHA = 0.35
+SPEED_SPIKE_FACTOR = 1.25
 
 # Occupancy mode
 MAX_OCCUPANCY_PERCENTAGE = 100

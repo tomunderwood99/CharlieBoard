@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Tuple, Optional
 from .base_mode import DisplayModeBase
 from .color_utils import interpolate_color
-from config.constants import MAX_VEHICLE_SPEED_MPH
+from ..speed_estimator import line_max_speed_mph
 from config.validation import DEFAULT_SETTINGS
 
 class SpeedMode(DisplayModeBase):
@@ -10,7 +10,8 @@ class SpeedMode(DisplayModeBase):
     def __init__(self, led_count: int, station_maps: Dict, station_id_map: Dict, settings: Dict):
         """Initialize the speed mode."""
         super().__init__(led_count, station_maps, station_id_map, settings)
-        self.max_speed = MAX_VEHICLE_SPEED_MPH  # Maximum expected speed in mph
+        route = settings.get('route', 'Red')
+        self.max_speed = line_max_speed_mph(route)  # Maximum expected speed in mph
         
         # Get color settings with defaults from DEFAULT_SETTINGS
         self.min_speed_color = settings.get('min_speed_color', DEFAULT_SETTINGS['min_speed_color'])
@@ -18,15 +19,21 @@ class SpeedMode(DisplayModeBase):
         self.null_speed_color = settings.get('null_speed_color', DEFAULT_SETTINGS['null_speed_color'])
     
     def set_vehicle_led_color(self, vehicle_data: Dict[str, Any], led_position: int) -> Optional[Tuple[int, int, int]]:
-        """Determine LED color based on vehicle speed."""
-        # Get speed data
-        speed = vehicle_data['attributes'].get('speed')
+        """Determine LED color based on vehicle speed.
         
-        if speed is None or speed == 0:
-            # No speed data or stopped
+        Expects attributes._display_speed_mph (enriched by ModeManager):
+        None → null_speed_color (unknown)
+        0 → min_speed_color (STOPPED_AT / stopped)
+        >0 → interpolate toward max_speed_color
+        """
+        speed = vehicle_data['attributes'].get('_display_speed_mph')
+        
+        if speed is None:
             return tuple(self.null_speed_color)
         
-        # Interpolate between min and max speed colors
+        if speed == 0:
+            return tuple(self.min_speed_color)
+        
         return interpolate_color(speed, self.max_speed, self.min_speed_color, self.max_speed_color)
     
     def get_color_key(self) -> List[Tuple[int, int, int]]:
@@ -34,7 +41,7 @@ class SpeedMode(DisplayModeBase):
         return [
             tuple(self.min_speed_color),    # Min speed color
             tuple(self.max_speed_color),    # Max speed color
-            tuple(self.null_speed_color)    # No data/stopped color
+            tuple(self.null_speed_color)    # Unknown / no speed data
         ]
     
     def update_settings(self, new_settings: Dict[str, Any]) -> None:
@@ -44,6 +51,9 @@ class SpeedMode(DisplayModeBase):
             new_settings: Dictionary containing new settings
         """
         self.settings = new_settings
+        
+        route = new_settings.get('route', 'Red')
+        self.max_speed = line_max_speed_mph(route)
         
         # Update color settings with new values from DEFAULT_SETTINGS
         self.min_speed_color = new_settings.get('min_speed_color', DEFAULT_SETTINGS['min_speed_color'])
